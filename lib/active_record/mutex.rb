@@ -46,24 +46,23 @@ module ActiveRecord
       # Locks the mutex if it isn't already locked via another database
       # connection and yields to the given block. After executing the block's
       # content the mutex is unlocked (only if it was locked by this
-      # synchronize method before) and the synchronize method returns true.
+      # synchronize method before).
       #
       # If the mutex was already locked by another database connection the
       # method blocks until it could aquire the lock and only then the block's
       # content is executed. If the mutex was already locked by the current database
-      # connection then the block's content is run and the synchronize method
-      # returns true.
+      # connection then the block's content is run and the the mutex isn't
+      # unlocked afterwards.
       #
       # If a value in seconds is passed to the :timeout option the blocking
-      # ends after that many seconds and the method returns false if the lock
-      # couldn't be aquired during that time.
+      # ends after that many seconds and the method returns immediately if the
+      # lock couldn't be aquired during that time.
       def synchronize(opts = {})
         locked_before = aquired_lock?
         lock opts
         yield
-        true
       rescue ActiveRecord::Mutex::MutexLocked
-        return false
+        return nil
       ensure
         locked_before or unlock
       end
