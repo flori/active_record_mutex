@@ -132,7 +132,7 @@ module ActiveRecord
 
       def query(sql)
         if result = ActiveRecord::Base.connection.execute(sql)
-          result = result.fetch_row.first.to_i
+          result = result.first.first.to_i
           $DEBUG and warn %{query("#{sql}") = #{result}}
         end
         result
