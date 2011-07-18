@@ -1,3 +1,5 @@
+= ActiveRecord::Mutex
+
 == Description
 
 This gem provides a Mutex that is based on ctiveRecord's database connection.
