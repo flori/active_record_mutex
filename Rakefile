@@ -4,7 +4,7 @@ require 'gem_hadar'
 
 GemHadar do
   name        'active_record_mutex'
-  path_name   'active_record/mutex'
+  path_name   'active_record/database_mutex'
   author      'Florian Frank'
   email       'flori@ping.de'
   homepage    "http://github.com/flori/#{name}"
@@ -15,6 +15,6 @@ GemHadar do
   ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock'
   readme      'README.rdoc'
 
-  dependency  'mysql2', '~>0.2.11'
+  dependency  'mysql2', '~>0.3.0'
   dependency  'activerecord'
 end

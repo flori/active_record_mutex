@@ -1,6 +1,6 @@
-module ActiveRecord::Mutex
-  # ActiveRecord::Mutex version
-  VERSION         = '0.0.1'
+module ActiveRecord::DatabaseMutex
+  # ActiveRecord::DatabaseMutex version
+  VERSION         = '1.0.0'
   VERSION_ARRAY   = VERSION.split(/\./).map { |x| x.to_i } # :nodoc:
   VERSION_MAJOR   = VERSION_ARRAY[0] # :nodoc:
   VERSION_MINOR   = VERSION_ARRAY[1] # :nodoc:

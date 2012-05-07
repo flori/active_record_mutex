@@ -1,1 +1,1 @@
-require 'active_record/mutex'
+require 'active_record/database_mutex'

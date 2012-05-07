@@ -2,16 +2,9 @@
 
 == Description
 
-This gem provides a Mutex that is based on ctiveRecord's database connection.
+This gem provides a Mutex that is based on ActiveRecord's database connection.
 (At the moment this only works for Mysql.) It can be used to synchronise
-different ruby processes via the connected database.
-
-== Download
-
-The latest version of the <b>active_record_mutex</b> source archive can be
-found at
-
-* http://www.ping.de/~flori
+ruby processes (also on different hosts) via the connected database.
 
 == Installation
 
