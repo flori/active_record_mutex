@@ -17,10 +17,17 @@ module ActiveRecord
     # moment and lock was called again.
     class MutexLocked < MutexError; end
 
+    class MutexInvalidState <  MutexError; end
+
     def self.included(modul)
       modul.instance_eval do
         extend ClassMethods
       end
+    end
+
+    # XXX
+    def self.for(name)
+      Implementation.new(:name => name)
     end
 
     module ClassMethods
@@ -32,7 +39,11 @@ module ActiveRecord
 
     # Returns a mutex instance for this ActiveRecord instance.
     def mutex
-      @mutex ||= Implementation.new(:name => self.class.name)
+      if persisted?
+        @mutex ||= Implementation.new(:name => "#{id}@#{self.class.name}")
+      else
+        raise MutexInvalidState, "instance #{inspect} not persisted"
+      end
     end
   end
 end

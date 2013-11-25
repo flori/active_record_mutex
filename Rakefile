@@ -12,9 +12,10 @@ GemHadar do
   description  'Mutex that can be used to synchronise ruby processes via an ActiveRecord'\
                ' datababase connection. (Only Mysql is supported at the moment.)'
   test_dir    'test'
-  ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock', '.DS_Store'
+  ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock', '.DS_Store', 'coverage'
   readme      'README.rdoc'
 
-  dependency  'mysql2', '~>0.3.0'
-  dependency  'activerecord'
+  dependency              'mysql2', '~>0.3.0'
+  dependency              'activerecord'
+  development_dependency  'simplecov'
 end

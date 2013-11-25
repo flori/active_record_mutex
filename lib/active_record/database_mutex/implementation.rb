@@ -25,12 +25,12 @@ module ActiveRecord
       # lock couldn't be aquired during that time.
       def synchronize(opts = {})
         locked_before = aquired_lock?
-        lock opts
+        locked = lock(opts) or return
         yield
       rescue ActiveRecord::DatabaseMutex::MutexLocked
         return nil
       ensure
-        locked_before or unlock
+        locked_before or locked && unlock
       end
 
       # Locks the mutex and returns true if successful. If the mutex is
@@ -39,11 +39,17 @@ module ActiveRecord
       # seconds. If the :timeout option wasn't given, this method blocks until
       # the lock could be aquired.
       def lock(opts = {})
-        if opts[:timeout]
+        if opts[:nonblock] # XXX document
+          begin
+            lock_with_timeout :timeout => 0
+          rescue MutexLocked
+          end
+        elsif opts[:timeout]
           lock_with_timeout opts
         else
+          spin_timeout = opts[:spin_timeout] || 1 # XXX document
           begin
-            lock_with_timeout :timeout => 1
+            lock_with_timeout :timeout => spin_timeout
           rescue MutexLocked
             retry
           end
@@ -52,16 +58,24 @@ module ActiveRecord
 
       # Unlocks the mutex and returns true if successful. Otherwise this method
       # raises a MutexLocked exception.
-      def unlock(*)
-        case query("SELECT RELEASE_LOCK(#{ActiveRecord::Base.quote_value(name)})")
+      def unlock(opts = {})
+        case query("SELECT RELEASE_LOCK(#{quote(name)})")
         when 1      then true
         when 0, nil then raise MutexUnlockFailed, "unlocking of mutex '#{name}' failed"
         end
       end
 
+      # XXX
+      def unlock?(*a)
+        unlock(*a)
+        self
+      rescue MutexUnlockFailed
+        nil
+      end
+
       # Returns true if this mutex is unlocked at the moment.
       def unlocked?
-        query("SELECT IS_FREE_LOCK(#{ActiveRecord::Base.quote_value(name)})") == 1
+        query("SELECT IS_FREE_LOCK(#{quote(name)})") == 1
       end
 
       # Returns true if this mutex is locked at the moment.
@@ -71,7 +85,7 @@ module ActiveRecord
 
       # Returns true if this mutex is locked by this database connection.
       def aquired_lock?
-        query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{ActiveRecord::Base.quote_value(name)})") == 1
+        query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{quote(name)})") == 1
       end
 
       # Returns true if this mutex is not locked by this database connection.
@@ -90,7 +104,7 @@ module ActiveRecord
 
       def lock_with_timeout(opts = {})
         timeout = opts[:timeout] || 1
-        case query("SELECT GET_LOCK(#{ActiveRecord::Base.quote_value(name)}, #{timeout})")
+        case query("SELECT GET_LOCK(#{quote(name)}, #{timeout})")
         when 1 then true
         when 0 then raise MutexLocked, "mutex '#{name}' is already locked"
         end
@@ -104,6 +118,10 @@ module ActiveRecord
         result
       rescue ActiveRecord::StatementInvalid
         nil
+      end
+
+      def quote(string)
+        ActiveRecord::Base.quote_value(string)
       end
     end
   end
