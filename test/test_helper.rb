@@ -1,3 +1,8 @@
+if ENV.key?('CODECLIMATE_REPO_TOKEN')
+  require "codeclimate-test-reporter"
+  CodeClimate::TestReporter.start
+end
+
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 require 'active_record'
 require 'active_record/database_mutex'
