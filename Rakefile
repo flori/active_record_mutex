@@ -17,4 +17,6 @@ GemHadar do
 
   dependency  'mysql2', '~>0.3.0'
   dependency  'activerecord'
+  development_dependency 'test-unit', '~>3.0'
+  development_dependency 'byebug'
 end
