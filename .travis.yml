@@ -7,3 +7,5 @@ matrix:
   allow_failures:
     - rvm: ruby-head
     - rvm: jruby-head
+before_script:
+    - mysql -e 'create database test;'

@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.description = "Mutex that can be used to synchronise ruby processes via an ActiveRecord datababase connection. (Only Mysql is supported at the moment.)"
   s.email = "flori@ping.de"
   s.extra_rdoc_files = ["README.rdoc", "lib/active_record/database_mutex.rb", "lib/active_record/database_mutex/implementation.rb", "lib/active_record/database_mutex/version.rb", "lib/active_record/mutex.rb", "lib/active_record_mutex.rb"]
-  s.files = [".gitignore", "CHANGES", "Gemfile", "README.rdoc", "Rakefile", "VERSION", "active_record_mutex.gemspec", "lib/active_record/database_mutex.rb", "lib/active_record/database_mutex/implementation.rb", "lib/active_record/database_mutex/version.rb", "lib/active_record/mutex.rb", "lib/active_record_mutex.rb", "test/mutex_test.rb", "test/test_helper.rb"]
+  s.files = [".gitignore", ".travis.yml", "CHANGES", "Gemfile", "README.rdoc", "Rakefile", "VERSION", "active_record_mutex.gemspec", "lib/active_record/database_mutex.rb", "lib/active_record/database_mutex/implementation.rb", "lib/active_record/database_mutex/version.rb", "lib/active_record/mutex.rb", "lib/active_record_mutex.rb", "test/mutex_test.rb", "test/test_helper.rb"]
   s.homepage = "http://github.com/flori/active_record_mutex"
   s.rdoc_options = ["--title", "ActiveRecordMutex - Implementation of a Mutex for Active Record", "--main", "README.rdoc"]
   s.rubygems_version = "2.4.4"
