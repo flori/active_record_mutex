@@ -42,6 +42,7 @@ Now you can send all messages directly to the Mutex instance.
 
 ## Changes
 
+* 2014-12-12 Release 2.0.0
 * 2014-12-12 Add license information
 * 2014-12-09 Adapt to newer Rails versions' API
 
