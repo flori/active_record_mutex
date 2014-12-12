@@ -10,15 +10,15 @@ ruby processes (also on different hosts) via the connected database.
 
 You can use rubygems to fetch the gem and install it for you:
 
-  # gem install active_record_mutex
+    # gem install active_record_mutex
 
 You can also put this line into your Rails environment.rb file
 
-  config.gem 'active_record_mutex'
+    config.gem 'active_record_mutex'
 
 and install the gem via
 
-  $ rake gems:install
+    $ rake gems:install
 
 ## Usage
 
