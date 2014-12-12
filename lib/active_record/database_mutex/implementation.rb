@@ -25,12 +25,12 @@ module ActiveRecord
       # lock couldn't be aquired during that time.
       def synchronize(opts = {})
         locked_before = aquired_lock?
-        lock opts
+        locked = lock(opts) or return
         yield
       rescue ActiveRecord::DatabaseMutex::MutexLocked
         return nil
       ensure
-        locked_before or unlock
+        locked_before or locked && unlock
       end
 
       # Locks the mutex and returns true if successful. If the mutex is
@@ -39,11 +39,17 @@ module ActiveRecord
       # seconds. If the :timeout option wasn't given, this method blocks until
       # the lock could be aquired.
       def lock(opts = {})
-        if opts[:timeout]
+        if opts[:nonblock] # XXX document
+          begin
+            lock_with_timeout :timeout => 0
+          rescue MutexLocked
+          end
+        elsif opts[:timeout]
           lock_with_timeout opts
         else
+          spin_timeout = opts[:spin_timeout] || 1 # XXX document
           begin
-            lock_with_timeout :timeout => 1
+            lock_with_timeout :timeout => spin_timeout
           rescue MutexLocked
             retry
           end
@@ -57,6 +63,14 @@ module ActiveRecord
         when 1      then true
         when 0, nil then raise MutexUnlockFailed, "unlocking of mutex '#{name}' failed"
         end
+      end
+
+      # XXX
+      def unlock?(*a)
+        unlock(*a)
+        self
+      rescue MutexUnlockFailed
+        nil
       end
 
       # Returns true if this mutex is unlocked at the moment.

@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class MutexTest < Test::Unit::TestCase
+class DatabaseMutexTest < Test::Unit::TestCase
   include ActiveRecord::DatabaseMutex
 
   class Foo < ActiveRecord::Base; end
@@ -17,13 +17,26 @@ class MutexTest < Test::Unit::TestCase
     end
   end
 
-  def test_exported_methods
+  def test_class_methods
     mutex = Foo.mutex
     assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
     assert_equal mutex.name, Foo.name
-    mutex = Foo.new.mutex
+  end
+
+  def test_instance_method
+    instance = Foo.new
+    assert_raises(ActiveRecord::DatabaseMutex::MutexInvalidState) do
+      instance.mutex
+    end
+    assert_equal true, instance.save
+    mutex = instance.mutex
     assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
-    assert_equal mutex.name, Foo.name
+    assert_equal mutex.name, "#{instance.id}@#{Foo.name}"
+  end
+
+  def test_factory_method_for
+    mutex = ActiveRecord::DatabaseMutex.for('some_name')
+    assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
   end
 
   def test_create
