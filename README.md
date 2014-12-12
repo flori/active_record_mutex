@@ -49,7 +49,7 @@ Now you can send all messages directly to the Mutex instance.
 
 The homepage of this library is located at
 
-* https://github.com/flori/active\_record\_mutex
+* https://github.com/flori/active_record_mutex
 
 ## Author
 
