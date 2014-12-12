@@ -53,7 +53,7 @@ The homepage of this library is located at
 
 ## Author
 
-Florian Frank mailto:flori@ping.de
+[Florian Frank](mailto:flori@ping.de)
 
 ## License
 
