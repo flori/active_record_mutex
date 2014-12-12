@@ -39,3 +39,23 @@ create Mutex instance like this:
   my_mutex = ActiveRecord::Mutex::Mutex.new(:name => 'my_mutex')
 
 Now you can send all messages directly to the Mutex instance.
+
+## Changes
+
+* 2014-12-12 Add license information
+* 2014-12-09 Adapt to newer Rails versions' API
+
+## Download
+
+The homepage of this library is located at
+
+* https://github.com/flori/active\_record\_mutex
+
+## Author
+
+Florian Frank mailto:flori@ping.de
+
+## License
+
+This software is licensed under the GPL (Version 2) license, see the file
+COPYING.

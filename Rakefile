@@ -14,6 +14,7 @@ GemHadar do
   test_dir    'test'
   ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock'
   readme      'README.md'
+  licenses    << 'GPL-2'
 
   dependency  'mysql2', '~>0.3.0'
   dependency  'activerecord'
