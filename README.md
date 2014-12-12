@@ -36,7 +36,7 @@ This mutex instance will be named Foo like the ActiveRecord was named:
 If you want more control over the mutex and/or give it a special name you can
 create Mutex instance like this:
 
-  my_mutex = ActiveRecord::Mutex::Mutex.new(:name => 'my_mutex')
+    my_mutex = ActiveRecord::Mutex::Mutex.new(:name => 'my_mutex')
 
 Now you can send all messages directly to the Mutex instance.
 
