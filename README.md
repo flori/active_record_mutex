@@ -1,12 +1,12 @@
-= ActiveRecord::Mutex
+# ActiveRecord::Mutex
 
-== Description
+## Description
 
 This gem provides a Mutex that is based on ActiveRecord's database connection.
 (At the moment this only works for Mysql.) It can be used to synchronise
 ruby processes (also on different hosts) via the connected database.
 
-== Installation
+## Installation
 
 You can use rubygems to fetch the gem and install it for you:
 
@@ -20,7 +20,7 @@ and install the gem via
 
   $ rake gems:install
 
-== Usage
+## Usage
 
 If you want to synchronize method calls to your model's methods you can easily
 do this by passing a mutex instance to ActiveRecord's synchronize class method.

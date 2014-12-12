@@ -13,7 +13,7 @@ GemHadar do
                ' datababase connection. (Only Mysql is supported at the moment.)'
   test_dir    'test'
   ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock'
-  readme      'README.rdoc'
+  readme      'README.md'
 
   dependency  'mysql2', '~>0.3.0'
   dependency  'activerecord'
