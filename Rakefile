@@ -12,7 +12,8 @@ GemHadar do
   description  'Mutex that can be used to synchronise ruby processes via an ActiveRecord'\
                ' datababase connection. (Only Mysql is supported at the moment.)'
   test_dir    'test'
-  ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock', '.DS_Store', 'coverage'
+  ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock', '.DS_Store', 'coverage',
+    '.byebug_history'
   readme      'README.md'
   licenses    << 'GPL-2'
 

@@ -1,5 +1,6 @@
 .*.sw[pon]
 .DS_Store
+.byebug_history
 Gemfile.lock
 coverage
 pkg

@@ -2,9 +2,15 @@ if ENV.key?('CODECLIMATE_REPO_TOKEN')
   require "codeclimate-test-reporter"
   CodeClimate::TestReporter.start
 end
+if ENV['START_SIMPLECOV'].to_i == 1
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter "#{File.basename(File.dirname(__FILE__))}/"
+  end
+end
 
-$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 require 'active_record'
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 require 'active_record/database_mutex'
 
 ActiveRecord::Base.establish_connection(

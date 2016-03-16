@@ -24,13 +24,12 @@ module ActiveRecord
       # ends after that many seconds and the method returns immediately if the
       # lock couldn't be aquired during that time.
       def synchronize(opts = {})
-        locked_before = aquired_lock?
         locked = lock(opts) or return
         yield
       rescue ActiveRecord::DatabaseMutex::MutexLocked
         return nil
       ensure
-        locked_before or locked && unlock
+        locked && unlock
       end
 
       # Locks the mutex and returns true if successful. If the mutex is
@@ -65,7 +64,8 @@ module ActiveRecord
         end
       end
 
-      # XXX
+      # Unlock this mutex and return self if successful, otherwise (the mutex
+      # was not locked) nil is returned.
       def unlock?(*a)
         unlock(*a)
         self

@@ -25,7 +25,7 @@ module ActiveRecord
       end
     end
 
-    # XXX
+    # Return a mutex implementation for the mutex named +name+.
     def self.for(name)
       Implementation.new(:name => name)
     end

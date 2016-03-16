@@ -101,4 +101,12 @@ class DatabaseMutexTest < Test::Unit::TestCase
     end
     assert mutex.unlocked?
   end
+
+  def test_synchronize_already_locked
+    mutex = Implementation.new(:name => 'Sync4')
+    def mutex.lock(*)
+      raise ActiveRecord::DatabaseMutex::MutexLocked
+    end
+    assert_nil mutex.synchronize {}
+  end
 end
