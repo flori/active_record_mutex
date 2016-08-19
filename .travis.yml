@@ -11,3 +11,4 @@ before_script:
     - mysql -e 'create database test;'
 env:
   - CODECLIMATE_REPO_TOKEN=316615e61480039c3444f59bf124cf810d31110326e51f133e9cc9852de14892
+sudo: false

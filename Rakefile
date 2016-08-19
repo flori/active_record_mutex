@@ -18,7 +18,7 @@ GemHadar do
   licenses    << 'GPL-2'
 
   dependency             'mysql2', '~>0.3.0'
-  dependency             'activerecord'
+  dependency             'activerecord', '~> 4.0'
   development_dependency 'test-unit', '~>3.0'
   development_dependency 'byebug'
   development_dependency 'simplecov'

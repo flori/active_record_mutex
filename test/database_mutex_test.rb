@@ -17,10 +17,28 @@ class DatabaseMutexTest < Test::Unit::TestCase
     end
   end
 
-  def test_class_methods
+  def test_class_method_mutex
+    old, ENV['RAILS_ENV'] = ENV['RAILS_ENV'], nil
+    Foo.instance_eval do
+      @mutex = nil
+    end
     mutex = Foo.mutex
     assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
-    assert_equal mutex.name, Foo.name
+    assert_equal Foo.name, mutex.name
+  ensure
+    ENV['RAILS_ENV'] = old
+  end
+
+  def test_class_method_mutex_within_env
+    old, ENV['RAILS_ENV'] = ENV['RAILS_ENV'], 'test'
+    Foo.instance_eval do
+      @mutex = nil
+    end
+    mutex = Foo.mutex
+    assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
+    assert_equal "#{Foo.name}@test", mutex.name
+  ensure
+    ENV['RAILS_ENV'] = old
   end
 
   def test_instance_method
@@ -31,7 +49,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_equal true, instance.save
     mutex = instance.mutex
     assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
-    assert_equal mutex.name, "#{instance.id}@#{Foo.name}"
+    assert_equal "#{instance.id}@#{Foo.name}", mutex.name
   end
 
   def test_factory_method_for

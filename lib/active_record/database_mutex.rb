@@ -17,7 +17,7 @@ module ActiveRecord
     # moment and lock was called again.
     class MutexLocked < MutexError; end
 
-    class MutexInvalidState <  MutexError; end
+    class MutexInvalidState < MutexError; end
 
     def self.included(modul)
       modul.instance_eval do
@@ -33,7 +33,9 @@ module ActiveRecord
     module ClassMethods
       # Returns a mutex instance for this ActiveRecord subclass.
       def mutex
-        @mutex ||= Implementation.new(:name => name)
+        @mutex ||= Implementation.new(
+          :name => [ name, ENV['RAILS_ENV'] ].compact * ?@
+        )
       end
     end
 
