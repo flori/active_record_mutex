@@ -34,7 +34,7 @@ module ActiveRecord
       # Returns a mutex instance for this ActiveRecord subclass.
       def mutex
         @mutex ||= Implementation.new(
-          :name => [ name, ENV['RAILS_ENV'] ].compact * ?@
+          :name => [ name, defined?(Rails) ? Rails.env : ENV['RAILS_ENV'] ].compact * ?@
         )
       end
     end
