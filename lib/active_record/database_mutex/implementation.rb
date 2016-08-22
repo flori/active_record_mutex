@@ -24,12 +24,16 @@ module ActiveRecord
       # ends after that many seconds and the method returns immediately if the
       # lock couldn't be aquired during that time.
       def synchronize(opts = {})
-        locked = lock(opts) or return
+        if aquired_lock?
+          locked = false
+        else
+          locked = lock(opts) or return
+        end
         yield
       rescue ActiveRecord::DatabaseMutex::MutexLocked
         return nil
       ensure
-        locked && unlock
+        locked and unlock
       end
 
       # Locks the mutex and returns true if successful. If the mutex is
@@ -107,6 +111,7 @@ module ActiveRecord
       end
 
       def lock_with_timeout(opts = {})
+       aquired_lock? and return true
         timeout = opts[:timeout] || 1
         case query("SELECT GET_LOCK(#{quote_value(name)}, #{timeout})")
         when 1 then true
