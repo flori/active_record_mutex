@@ -40,13 +40,6 @@ create Mutex instance like this:
 
 Now you can send all messages directly to the Mutex instance.
 
-## Changes
-
-* 2016-08-19 Make locks rails environments independent
-* 2014-12-12 Release 2.0.0
-* 2014-12-12 Add license information
-* 2014-12-09 Adapt to newer Rails versions' API
-
 ## Download
 
 The homepage of this library is located at
