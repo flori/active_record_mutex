@@ -61,7 +61,7 @@ module ActiveRecord
         if aquired_lock?
           decrease_counter
           if counter_zero?
-            case query("SELECT RELEASE_LOCK(#{quote_value(name)})")
+            case query("SELECT RELEASE_LOCK(#{quote(name)})")
             when 1
               true
             when 0, nil
@@ -84,7 +84,7 @@ module ActiveRecord
 
       # Returns true if this mutex is unlocked at the moment.
       def unlocked?
-        query("SELECT IS_FREE_LOCK(#{quote_value(name)})") == 1
+        query("SELECT IS_FREE_LOCK(#{quote(name)})") == 1
       end
 
       # Returns true if this mutex is locked at the moment.
@@ -94,7 +94,7 @@ module ActiveRecord
 
       # Returns true if this mutex is locked by this database connection.
       def aquired_lock?
-        query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{quote_value(name)})") == 1
+        query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{quote(name)})") == 1
       end
 
       # Returns true if this mutex is not locked by this database connection.
@@ -111,7 +111,7 @@ module ActiveRecord
 
       private
 
-      def quote_value(value)
+      def quote(value)
         ActiveRecord::Base.connection.quote(value)
       end
 
@@ -141,7 +141,7 @@ module ActiveRecord
           true
         else
           timeout = opts[:timeout] || 1
-          case query("SELECT GET_LOCK(#{quote_value(name)}, #{timeout})")
+          case query("SELECT GET_LOCK(#{quote(name)}, #{timeout})")
           when 1
             increase_counter
             true
