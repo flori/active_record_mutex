@@ -6,6 +6,7 @@ module ActiveRecord
       # Creates a mutex with the name given with the option :name.
       def initialize(opts = {})
         @name = opts[:name] or raise ArgumentError, "mutex requires a :name argument"
+        counter or raise ArgumentError, 'argument :name is too long'
       end
 
       # Returns the name of this mutex as given as a constructor argument.
@@ -118,9 +119,11 @@ module ActiveRecord
       end
 
       def counter
-        encoded_name = Base64.encode64(name).delete('^A-Za-z0-9+/').
+        encoded_name = ?$ + Base64.encode64(name).delete('^A-Za-z0-9+/').
           gsub(/[+\/]/, ?+ => ?_, ?/ => ?.)
-        "@#{encoded_name}_mutex_counter"
+        if encoded_name.size <= 64 # mysql 5.7 only allows size <=64 variable names
+          "@#{encoded_name}"
+        end
       end
 
       def increase_counter

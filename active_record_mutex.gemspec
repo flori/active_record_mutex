@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
-# stub: active_record_mutex 2.3.1 ruby lib
+# stub: active_record_mutex 2.3.2 ruby lib
 
 Gem::Specification.new do |s|
   s.name = "active_record_mutex"
-  s.version = "2.3.1"
+  s.version = "2.3.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib"]
