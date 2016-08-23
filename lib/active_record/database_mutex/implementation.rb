@@ -1,3 +1,5 @@
+require 'base64'
+
 module ActiveRecord
   module DatabaseMutex
     class Implementation
@@ -116,7 +118,9 @@ module ActiveRecord
       end
 
       def counter
-        "@#{name}_mutex_counter"
+        encoded_name = Base64.encode64(name).delete('^A-Za-z0-9+/').
+          gsub(/[+\/]/, ?+ => ?_, ?/ => ?.)
+        "@#{encoded_name}_mutex_counter"
       end
 
       def increase_counter

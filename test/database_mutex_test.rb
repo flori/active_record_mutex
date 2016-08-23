@@ -146,4 +146,11 @@ class DatabaseMutexTest < Test::Unit::TestCase
     end
     assert_nil mutex.synchronize {}
   end
+
+  def test_counter_name
+    mutex = Implementation.new(:name => (0..255).map(&:chr) * '')
+    assert_equal <<~EOS.chomp, mutex.send(:counter)
+      @AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0_P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn_AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq_wsbKztLW2t7i5uru8vb6.wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t.g4eLj5OXm5_jp6uvs7e7v8PHy8.T19vf4_fr7.P3_.w_mutex_counter
+    EOS
+  end
 end
