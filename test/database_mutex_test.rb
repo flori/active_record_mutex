@@ -65,30 +65,39 @@ class DatabaseMutexTest < Test::Unit::TestCase
   def test_lock
     mutex = Implementation.new(:name => 'Lock')
     assert mutex.unlocked?
+    assert_equal 0, mutex.send(:counter_value)
     assert mutex.lock
     assert mutex.locked?
     assert mutex.aquired_lock?
+    assert_equal 1, mutex.send(:counter_value)
     assert mutex.lock
+    assert_equal 2, mutex.send(:counter_value)
   end
 
   def test_unlock
     mutex = Implementation.new(:name => 'Unlock')
     assert_raises(ActiveRecord::DatabaseMutex::MutexUnlockFailed) { mutex.unlock }
+    assert_equal 0, mutex.send(:counter_value)
     assert mutex.lock
     assert mutex.locked?
     assert mutex.aquired_lock?
+    assert_equal 1, mutex.send(:counter_value)
     assert mutex.unlock
     assert mutex.unlocked?
+    assert_equal 0, mutex.send(:counter_value)
     assert_raises(ActiveRecord::DatabaseMutex::MutexUnlockFailed) { mutex.unlock }
   end
 
   def test_synchronize
     mutex = Implementation.new(:name => 'Sync1')
     assert mutex.unlocked?
+    assert_equal 0, mutex.send(:counter_value)
     mutex.synchronize do
       assert mutex.locked?
+      assert_equal 1, mutex.send(:counter_value)
     end
     assert mutex.unlocked?
+    assert_equal 0, mutex.send(:counter_value)
   end
 
   def test_synchronize_exception
@@ -110,14 +119,24 @@ class DatabaseMutexTest < Test::Unit::TestCase
   def test_synchronize_nested
     mutex = Implementation.new(:name => 'Sync3')
     assert mutex.unlocked?
+    assert mutex.send(:counter_zero?)
+    assert_equal 0, mutex.send(:counter_value)
     mutex.synchronize do
       assert mutex.locked?
+      assert !mutex.send(:counter_zero?)
+      assert_equal 1, mutex.send(:counter_value)
       mutex.synchronize do
         assert mutex.locked?
+        assert !mutex.send(:counter_zero?)
+        assert_equal 2, mutex.send(:counter_value)
       end
       assert mutex.locked?
+      assert !mutex.send(:counter_zero?)
+      assert_equal 1, mutex.send(:counter_value)
     end
     assert mutex.unlocked?
+    assert mutex.send(:counter_zero?)
+    assert_equal 0, mutex.send(:counter_value)
   end
 
   def test_synchronize_already_locked

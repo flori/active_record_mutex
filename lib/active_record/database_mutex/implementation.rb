@@ -24,11 +24,7 @@ module ActiveRecord
       # ends after that many seconds and the method returns immediately if the
       # lock couldn't be aquired during that time.
       def synchronize(opts = {})
-        if aquired_lock?
-          locked = false
-        else
-          locked = lock(opts) or return
-        end
+        locked = lock(opts) or return
         yield
       rescue ActiveRecord::DatabaseMutex::MutexLocked
         return nil
@@ -62,9 +58,18 @@ module ActiveRecord
       # Unlocks the mutex and returns true if successful. Otherwise this method
       # raises a MutexLocked exception.
       def unlock(*)
-        case query("SELECT RELEASE_LOCK(#{quote_value(name)})")
-        when 1      then true
-        when 0, nil then raise MutexUnlockFailed, "unlocking of mutex '#{name}' failed"
+        if aquired_lock?
+          decrease_counter
+          if counter_zero?
+            case query("SELECT RELEASE_LOCK(#{quote_value(name)})")
+            when 1
+              true
+            when 0, nil
+              raise MutexUnlockFailed, "unlocking of mutex '#{name}' failed"
+            end
+          end
+        else
+          raise MutexUnlockFailed, "unlocking of mutex '#{name}' failed"
         end
       end
 
@@ -110,12 +115,41 @@ module ActiveRecord
         ActiveRecord::Base.connection.quote(value)
       end
 
+      def counter
+        "@#{name}_mutex_counter"
+      end
+
+      def increase_counter
+        query("SET #{counter} = IF(#{counter} IS NULL OR #{counter} = 0, 1, #{counter} + 1)")
+      end
+
+      def decrease_counter
+        query("SET #{counter} = #{counter} - 1")
+      end
+
+      def counter_value
+        query("SELECT #{counter}").to_i
+      end
+
+      def counter_zero?
+        counter_value.zero?
+      end
+
       def lock_with_timeout(opts = {})
-       aquired_lock? and return true
-        timeout = opts[:timeout] || 1
-        case query("SELECT GET_LOCK(#{quote_value(name)}, #{timeout})")
-        when 1 then true
-        when 0 then raise MutexLocked, "mutex '#{name}' is already locked"
+        if aquired_lock?
+          increase_counter
+          true
+        else
+          timeout = opts[:timeout] || 1
+          case query("SELECT GET_LOCK(#{quote_value(name)}, #{timeout})")
+          when 1
+            increase_counter
+            true
+          when 0
+            raise MutexLocked, "mutex '#{name}' is already locked"
+          when nil
+            raise MutexSystemError, "mutex '#{name}' not locked due to system error"
+          end
         end
       end
 

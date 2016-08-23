@@ -19,6 +19,8 @@ module ActiveRecord
 
     class MutexInvalidState < MutexError; end
 
+    class MutexSystemError < MutexError; end
+
     def self.included(modul)
       modul.instance_eval do
         extend ClassMethods
