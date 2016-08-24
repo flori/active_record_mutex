@@ -1,8 +1,26 @@
 require 'base64'
+require 'tins/xt/string_version'
 
 module ActiveRecord
   module DatabaseMutex
     class Implementation
+
+      class << self
+        def db
+          ActiveRecord::Base.connection
+        end
+
+        def check_size?
+          if defined? @check_size
+            @check_size
+          else
+            version = db.execute("SHOW VARIABLES LIKE 'version'").first.last.
+              delete('^0-9.').version
+            @check_size = version >= '5.7'.version
+          end
+        end
+      end
+
       # Creates a mutex with the name given with the option :name.
       def initialize(opts = {})
         @name = opts[:name] or raise ArgumentError, "mutex requires a :name argument"
@@ -121,7 +139,7 @@ module ActiveRecord
       def counter
         encoded_name = ?$ + Base64.encode64(name).delete('^A-Za-z0-9+/').
           gsub(/[+\/]/, ?+ => ?_, ?/ => ?.)
-        if encoded_name.size <= 64 # mysql 5.7 only allows size <=64 variable names
+        if !self.class.check_size? || encoded_name.size <= 64 # mysql 5.7 only allows size <=64 variable names
           "@#{encoded_name}"
         end
       end
@@ -161,7 +179,7 @@ module ActiveRecord
       end
 
       def query(sql)
-        if result = ActiveRecord::Base.connection.execute(sql)
+        if result = self.class.db.execute(sql)
           result = result.first.first.to_i
           $DEBUG and warn %{query("#{sql}") = #{result}}
         end
