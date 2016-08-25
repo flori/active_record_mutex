@@ -146,9 +146,4 @@ class DatabaseMutexTest < Test::Unit::TestCase
     end
     assert_nil mutex.synchronize {}
   end
-
-  def test_counter_name
-    mutex = Implementation.new(:name => (250..255).map(&:chr) * '')
-    assert_equal '@$_vv8.f7.', mutex.send(:counter)
-  end
 end

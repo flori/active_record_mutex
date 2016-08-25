@@ -5,26 +5,21 @@ module ActiveRecord
   module DatabaseMutex
     class Implementation
 
-      class << self
-        def db
-          ActiveRecord::Base.connection
-        end
-
-        def check_size?
-          if defined? @check_size
-            @check_size
-          else
-            version = db.execute("SHOW VARIABLES LIKE 'version'").first.last.
-              delete('^0-9.').version
-            @check_size = version >= '5.7'.version
-          end
-        end
-      end
-
       # Creates a mutex with the name given with the option :name.
       def initialize(opts = {})
         @name = opts[:name] or raise ArgumentError, "mutex requires a :name argument"
-        counter or raise ArgumentError, 'argument :name is too long'
+        query %{
+          CREATE TEMPORARY TABLE IF NOT EXISTS mutex_counters
+            (
+              name CHAR(255) NOT NULL,
+              counter INT UNSIGNED NOT NULL DEFAULT 1,
+              PRIMARY KEY (name)
+            )
+        }
+      end
+
+      def db
+        ActiveRecord::Base.connection
       end
 
       # Returns the name of this mutex as given as a constructor argument.
@@ -82,7 +77,7 @@ module ActiveRecord
         if aquired_lock?
           decrease_counter
           if counter_zero?
-            case query("SELECT RELEASE_LOCK(#{quote(name)})")
+            case query %{ SELECT RELEASE_LOCK(#{quote(name)}) }
             when 1
               true
             when 0, nil
@@ -105,7 +100,7 @@ module ActiveRecord
 
       # Returns true if this mutex is unlocked at the moment.
       def unlocked?
-        query("SELECT IS_FREE_LOCK(#{quote(name)})") == 1
+        query(%{ SELECT IS_FREE_LOCK(#{quote(name)}) }).to_i == 1
       end
 
       # Returns true if this mutex is locked at the moment.
@@ -136,24 +131,26 @@ module ActiveRecord
         ActiveRecord::Base.connection.quote(value)
       end
 
-      def counter
-        encoded_name = ?$ + Base64.encode64(name).delete('^A-Za-z0-9+/').
-          gsub(/[+\/]/, ?+ => ?_, ?/ => ?.)
-        if !self.class.check_size? || encoded_name.size <= 64 # mysql 5.7 only allows size <=64 variable names
-          "@#{encoded_name}"
-        end
-      end
-
       def increase_counter
-        query("SET #{counter} = IF(#{counter} IS NULL OR #{counter} = 0, 1, #{counter} + 1)")
+        query %{
+          INSERT INTO mutex_counters (name)
+            VALUES (#{quote(@name)})
+            ON DUPLICATE KEY UPDATE counter = counter + 1
+        }
       end
 
       def decrease_counter
-        query("SET #{counter} = #{counter} - 1")
+        query %{
+          UPDATE mutex_counters SET counter = counter - 1
+            WHERE name = #{quote(@name)}
+        }
       end
 
       def counter_value
-        query("SELECT #{counter}").to_i
+        query(%{
+          SELECT counter FROM mutex_counters
+            WHERE name = #{quote(@name)}
+        }).to_i
       end
 
       def counter_zero?
@@ -166,7 +163,7 @@ module ActiveRecord
           true
         else
           timeout = opts[:timeout] || 1
-          case query("SELECT GET_LOCK(#{quote(name)}, #{timeout})")
+          case query %{ SELECT GET_LOCK(#{quote(name)}, #{timeout}) }
           when 1
             increase_counter
             true
@@ -178,16 +175,13 @@ module ActiveRecord
         end
       end
 
-      def query(sql)
-        if result = self.class.db.execute(sql)
-          result = result.first.first.to_i
-          $DEBUG and warn %{query("#{sql}") = #{result}}
+      def query(sql, index: 0)
+        if row = db.select_rows(sql).first
+          value = index ? row[index] : row
+          $DEBUG and warn %{query("#{sql}", #{index.inspect}) = #{value.inspect}}
+          value
         end
-        result
-      rescue ActiveRecord::StatementInvalid
-        nil
       end
     end
   end
 end
-
