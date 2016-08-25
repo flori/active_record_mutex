@@ -14,7 +14,7 @@ module ActiveRecord
               name CHAR(255) NOT NULL,
               counter INT UNSIGNED NOT NULL DEFAULT 1,
               PRIMARY KEY (name)
-            )
+            ) DEFAULT CHARSET=utf8mb4
         }
       end
 
