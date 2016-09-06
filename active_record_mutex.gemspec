@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
-# stub: active_record_mutex 2.3.6 ruby lib
+# stub: active_record_mutex 2.3.7 ruby lib
 
 Gem::Specification.new do |s|
   s.name = "active_record_mutex"
-  s.version = "2.3.6"
+  s.version = "2.3.7"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib"]
   s.authors = ["Florian Frank"]
-  s.date = "2016-08-25"
+  s.date = "2016-09-06"
   s.description = "Mutex that can be used to synchronise ruby processes via an ActiveRecord datababase connection. (Only Mysql is supported at the moment.)"
   s.email = "flori@ping.de"
   s.extra_rdoc_files = ["README.md", "lib/active_record/database_mutex.rb", "lib/active_record/database_mutex/implementation.rb", "lib/active_record/database_mutex/version.rb", "lib/active_record/mutex.rb", "lib/active_record_mutex.rb"]

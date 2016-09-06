@@ -8,6 +8,8 @@ module ActiveRecord
       # Creates a mutex with the name given with the option :name.
       def initialize(opts = {})
         @name = opts[:name] or raise ArgumentError, "mutex requires a :name argument"
+        query %{ SET @old_autocommit = @@autocommit }
+        query %{ SET autocommit = 1 }
         query %{
           CREATE TEMPORARY TABLE IF NOT EXISTS mutex_counters
             (
@@ -16,6 +18,7 @@ module ActiveRecord
               PRIMARY KEY (name(128))
             ) DEFAULT CHARSET=utf8mb4
         }
+        query %{ SET autocommit = @old_autocommit }
       end
 
       def db
