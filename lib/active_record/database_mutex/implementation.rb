@@ -5,20 +5,26 @@ module ActiveRecord
   module DatabaseMutex
     class Implementation
 
+      class << self
+        attr_accessor :table_name
+      end
+      self.table_name = 'active_record_mutex_counters'
+
       # Creates a mutex with the name given with the option :name.
       def initialize(opts = {})
         @name = opts[:name] or raise ArgumentError, "mutex requires a :name argument"
-        query %{ SET @old_autocommit = @@autocommit }
-        query %{ SET autocommit = 1 }
         query %{
-          CREATE TEMPORARY TABLE IF NOT EXISTS mutex_counters
+          CREATE TABLE IF NOT EXISTS #{table_name}
             (
               name CHAR(255) NOT NULL,
               counter INT UNSIGNED NOT NULL DEFAULT 1,
               PRIMARY KEY (name(128))
             ) DEFAULT CHARSET=utf8mb4
         }
-        query %{ SET autocommit = @old_autocommit }
+      end
+
+      def table_name
+        self.class.table_name
       end
 
       def db
@@ -136,7 +142,7 @@ module ActiveRecord
 
       def increase_counter
         query %{
-          INSERT INTO mutex_counters (name)
+          INSERT INTO #{table_name} (name)
             VALUES (#{quote(@name)})
             ON DUPLICATE KEY UPDATE counter = counter + 1
         }
@@ -144,14 +150,14 @@ module ActiveRecord
 
       def decrease_counter
         query %{
-          UPDATE mutex_counters SET counter = counter - 1
+          UPDATE #{table_name} SET counter = counter - 1
             WHERE name = #{quote(@name)}
         }
       end
 
       def counter_value
         query(%{
-          SELECT counter FROM mutex_counters
+          SELECT counter FROM #{table_name}
             WHERE name = #{quote(@name)}
         }).to_i
       end
