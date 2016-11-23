@@ -16,4 +16,5 @@ sudo: false
 addons:
   code_climate:
     repo_token: 316615e61480039c3444f59bf124cf810d31110326e51f133e9cc9852de14892
-
+env:
+  - START_SIMPLECOV=1
