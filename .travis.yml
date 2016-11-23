@@ -1,7 +1,8 @@
 rvm:
-  - 2.0.0
+  - 2.0
   - 2.1
-  - ruby-head
+  - 2.2
+  - 2.3.3
   - jruby-head
 matrix:
   allow_failures:
@@ -9,6 +10,10 @@ matrix:
     - rvm: jruby-head
 before_script:
     - mysql -e 'create database test;'
-env:
-  - CODECLIMATE_REPO_TOKEN=316615e61480039c3444f59bf124cf810d31110326e51f133e9cc9852de14892
+script:
+  - rake && codeclimate-test-reporter --file coverage
 sudo: false
+addons:
+  code_climate:
+    repo_token: 316615e61480039c3444f59bf124cf810d31110326e51f133e9cc9852de14892
+
