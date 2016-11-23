@@ -19,7 +19,7 @@ GemHadar do
 
   dependency             'mysql2',       '~>0.3.0'
   dependency             'activerecord', '~> 4.0'
-  dependency             'tins',         '~> 1.12.0'
+  dependency             'tins',         '~> 1.12'
   development_dependency 'test-unit',    '~>3.0'
   development_dependency 'byebug'
   development_dependency 'simplecov'
