@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
-# stub: active_record_mutex 2.5.0 ruby lib
+# stub: active_record_mutex 2.5.1 ruby lib
 
 Gem::Specification.new do |s|
   s.name = "active_record_mutex".freeze
-  s.version = "2.5.0"
+  s.version = "2.5.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
@@ -29,7 +29,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<byebug>.freeze, [">= 0"])
       s.add_development_dependency(%q<simplecov>.freeze, [">= 0"])
       s.add_runtime_dependency(%q<mysql2>.freeze, ["~> 0.3.0"])
-      s.add_runtime_dependency(%q<activerecord>.freeze, ["< 6", "~> 4.0"])
+      s.add_runtime_dependency(%q<activerecord>.freeze, ["< 6", ">= 4.0"])
       s.add_runtime_dependency(%q<tins>.freeze, ["~> 1.12"])
     else
       s.add_dependency(%q<gem_hadar>.freeze, ["~> 1.9.1"])
@@ -37,7 +37,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<byebug>.freeze, [">= 0"])
       s.add_dependency(%q<simplecov>.freeze, [">= 0"])
       s.add_dependency(%q<mysql2>.freeze, ["~> 0.3.0"])
-      s.add_dependency(%q<activerecord>.freeze, ["< 6", "~> 4.0"])
+      s.add_dependency(%q<activerecord>.freeze, ["< 6", ">= 4.0"])
       s.add_dependency(%q<tins>.freeze, ["~> 1.12"])
     end
   else
@@ -46,7 +46,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<byebug>.freeze, [">= 0"])
     s.add_dependency(%q<simplecov>.freeze, [">= 0"])
     s.add_dependency(%q<mysql2>.freeze, ["~> 0.3.0"])
-    s.add_dependency(%q<activerecord>.freeze, ["< 6", "~> 4.0"])
+    s.add_dependency(%q<activerecord>.freeze, ["< 6", ">= 4.0"])
     s.add_dependency(%q<tins>.freeze, ["~> 1.12"])
   end
 end
