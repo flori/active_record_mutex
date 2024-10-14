@@ -65,11 +65,11 @@ class DatabaseMutexTest < Test::Unit::TestCase
   def test_lock
     mutex = Implementation.new(:name => 'Lock')
     assert mutex.unlocked?
-    assert mutex.not_aquired_lock?
+    assert mutex.not_acquired_lock?
     assert_equal 0, mutex.send(:counter_value)
     assert mutex.lock
     assert mutex.locked?
-    assert mutex.aquired_lock?
+    assert mutex.acquired_lock?
     assert_equal 1, mutex.send(:counter_value)
     assert mutex.lock
     assert_equal 2, mutex.send(:counter_value)
@@ -94,11 +94,11 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_raises(ActiveRecord::DatabaseMutex::MutexLocked) { mutex.lock(timeout: 1) }
     thread.join
     assert mutex.unlocked?
-    assert_false mutex.aquired_lock?
+    assert_false mutex.acquired_lock?
     assert_equal 0, mutex.send(:counter_value)
     assert mutex.lock(timeout: 1)
     assert mutex.locked?
-    assert mutex.aquired_lock?
+    assert mutex.acquired_lock?
     assert_equal 1, mutex.send(:counter_value)
   end
 
@@ -121,7 +121,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
     thread.join
     assert mutex.lock
     assert mutex.locked?
-    assert mutex.aquired_lock?
+    assert mutex.acquired_lock?
     assert_equal 1, mutex.send(:counter_value)
   end
 
@@ -131,19 +131,19 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_equal 0, mutex.send(:counter_value)
     assert mutex.lock
     assert mutex.locked?
-    assert mutex.aquired_lock?
+    assert mutex.acquired_lock?
     assert_equal 1, mutex.send(:counter_value)
     assert mutex.lock
     assert mutex.locked?
-    assert mutex.aquired_lock?
+    assert mutex.acquired_lock?
     assert_equal 2, mutex.send(:counter_value)
     assert_false mutex.unlock
     assert_false mutex.unlocked?
-    assert_false mutex.not_aquired_lock?
+    assert_false mutex.not_acquired_lock?
     assert_equal 1, mutex.send(:counter_value)
     assert mutex.unlock
     assert mutex.unlocked?
-    assert mutex.not_aquired_lock?
+    assert mutex.not_acquired_lock?
     assert_equal 0, mutex.send(:counter_value)
     assert_raises(ActiveRecord::DatabaseMutex::MutexUnlockFailed) { mutex.unlock }
   end
@@ -154,15 +154,15 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_equal 0, mutex.send(:counter_value)
     assert mutex.lock
     assert mutex.locked?
-    assert mutex.aquired_lock?
+    assert mutex.acquired_lock?
     assert_equal 1, mutex.send(:counter_value)
     assert mutex.lock
     assert mutex.locked?
-    assert mutex.aquired_lock?
+    assert mutex.acquired_lock?
     assert_equal 2, mutex.send(:counter_value)
     assert mutex.unlock force: true
     assert mutex.unlocked?
-    assert mutex.not_aquired_lock?
+    assert mutex.not_acquired_lock?
     assert_equal 0, mutex.send(:counter_value)
     assert_raises(ActiveRecord::DatabaseMutex::MutexUnlockFailed) { mutex.unlock force: true }
   end
@@ -173,11 +173,11 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_equal 0, mutex.send(:counter_value)
     assert mutex.lock
     assert mutex.locked?
-    assert mutex.aquired_lock?
+    assert mutex.acquired_lock?
     assert_equal 1, mutex.send(:counter_value)
     assert mutex.unlock?
     assert mutex.unlocked?
-    assert mutex.not_aquired_lock?
+    assert mutex.not_acquired_lock?
     assert_equal 0, mutex.send(:counter_value)
     assert_nil mutex.unlock?
   end

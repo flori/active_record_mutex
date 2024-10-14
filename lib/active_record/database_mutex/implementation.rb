@@ -76,7 +76,7 @@ module ActiveRecord
       # If the lock doesn't belong to this connection raises a MutexLocked
       # exception.
       def unlock(opts = {})
-        if aquired_lock?
+        if acquired_lock?
           if opts[:force]
             reset_counter
           else
@@ -117,13 +117,13 @@ module ActiveRecord
       end
 
       # Returns true if this mutex is locked by this database connection.
-      def aquired_lock?
+      def acquired_lock?
         query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{quote(internal_name)})") == 1
       end
 
       # Returns true if this mutex is not locked by this database connection.
-      def not_aquired_lock?
-        not aquired_lock?
+      def not_acquired_lock?
+        not acquired_lock?
       end
 
       # Returns a string representation of this DatabaseMutex instance.
@@ -186,7 +186,7 @@ module ActiveRecord
       # MutexSystemError if a system error occured.
       def lock_with_timeout(opts = {})
         timeout = opts.fetch(:timeout) { raise ArgumentError, 'require :timeout argument' }
-        if aquired_lock?
+        if acquired_lock?
           increase_counter
           true
         else
