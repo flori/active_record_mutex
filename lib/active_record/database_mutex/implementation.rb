@@ -56,7 +56,10 @@ module ActiveRecord
       # If a :timeout option with the (nonnegative) timeout in seconds was
       # given, a MutexLocked exception is raised after this time, otherwise the
       # method blocks # forever.
+      # If :raise option is given as false, no MutexLocked exception is raised,
+      # but false is returned.
       def lock(opts = {})
+        opts = { raise: true }.merge(opts)
         if opts[:nonblock]
           begin
             lock_with_timeout timeout: 0
@@ -67,15 +70,24 @@ module ActiveRecord
           timeout = opts[:timeout] || -1
           lock_with_timeout timeout:
         end
+      rescue MutexLocked
+        if opts[:raise]
+          raise
+        else
+          return false
+        end
       end
 
       # Unlocks the mutex and returns true iff successful (= was unlocked as
       # many times as locked in this db connection). If the :force option was
       # given the lock is released anyway and true is returned.
       #
-      # If the lock doesn't belong to this connection raises a MutexLocked
+      # If the lock doesn't belong to this connection raises a MutexUnlockFailed
       # exception.
+      # If :raise option is given as false, no MutexUnlockFailed exception is
+      # raised, but false is returned.
       def unlock(opts = {})
+        opts = { raise: true }.merge(opts)
         if acquired_lock?
           if opts[:force]
             reset_counter
@@ -94,6 +106,12 @@ module ActiveRecord
           end
         else
           raise MutexUnlockFailed, "unlocking of mutex '#{name}' failed"
+        end
+      rescue MutexUnlockFailed
+        if opts[:raise]
+          raise
+        else
+          return false
         end
       end
 

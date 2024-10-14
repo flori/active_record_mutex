@@ -91,7 +91,8 @@ class DatabaseMutexTest < Test::Unit::TestCase
     until done
       sleep 0.1
     end
-    assert_raises(ActiveRecord::DatabaseMutex::MutexLocked) { mutex.lock(timeout: 1) }
+    assert_false mutex.lock(timeout: 0.1, raise: false)
+    assert_raises(ActiveRecord::DatabaseMutex::MutexLocked) { mutex.lock(timeout: 0.1) }
     thread.join
     assert mutex.unlocked?
     assert_false mutex.acquired_lock?
@@ -150,6 +151,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
 
   def test_unlock_with_force
     mutex = Implementation.new(:name => 'Unlock')
+    assert_false mutex.unlock raise: false
     assert_raises(ActiveRecord::DatabaseMutex::MutexUnlockFailed) { mutex.unlock }
     assert_equal 0, mutex.send(:counter_value)
     assert mutex.lock
@@ -164,6 +166,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert mutex.unlocked?
     assert mutex.not_acquired_lock?
     assert_equal 0, mutex.send(:counter_value)
+    assert_false mutex.unlock force: true, raise: false
     assert_raises(ActiveRecord::DatabaseMutex::MutexUnlockFailed) { mutex.unlock force: true }
   end
 
