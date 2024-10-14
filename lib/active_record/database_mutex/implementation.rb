@@ -1,5 +1,4 @@
 require 'digest/md5'
-require 'tins/xt/string_version'
 
 module ActiveRecord
   module DatabaseMutex
@@ -10,18 +9,6 @@ module ActiveRecord
         # The db method returns an instance of ActiveRecord::Base.connection
         def db
           ActiveRecord::Base.connection
-        end
-
-        # The check_size? method returns true when the MySQL version is 5.7 or
-        # higher.
-        def check_size?
-          if defined? @check_size
-            @check_size
-          else
-            version = db.execute("SHOW VARIABLES LIKE 'version'").first.last.
-              delete('^0-9.').version
-            @check_size = version >= '5.7'.version
-          end
         end
       end
 
@@ -149,15 +136,15 @@ module ActiveRecord
 
       # The counter method generates a unique name for the mutex's internal
       # counter variable. This name is used as part of the SQL query to set
-      # and retrieve the counter value. A MutexInvalidState exception is
-      # raised for mysql >= 5.7 the counter name is # longer than 64
-      # characters.
+      # and retrieve the counter value.
       def counter
-        encoded_name = ?$ + Digest::MD5.base64digest(name).delete('^A-Za-z0-9+/').
+        encoded_name = ?$ +
+          Digest::MD5.base64digest(name).delete('^A-Za-z0-9+/').
           gsub(/[+\/]/, ?+ => ?_, ?/ => ?.)
-        if !self.class.check_size? || encoded_name.size <= 64
+        if encoded_name.size <= 64
           "@#{encoded_name}"
         else
+          # This should never happen:
           raise MutexInvalidState, "counter name too long: >64 characters"
         end
       end
