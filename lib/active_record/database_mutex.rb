@@ -17,8 +17,15 @@ module ActiveRecord
     # moment and lock was called again.
     class MutexLocked < MutexError; end
 
+    # This exception raised when an unexpected situation occurs while managing
+    # the mutex lock, such as incorrect encoding or handling of internal mutex
+    # names.
     class MutexInvalidState < MutexError; end
 
+    # This exception is raised when an unexpected system-related issue prevents
+    # the mutex (lock) from being acquired or managed properly, often due to
+    # disk I/O errors, database connection issues, resource limitations, or
+    # lock file permissions problems.
     class MutexSystemError < MutexError; end
 
     def self.included(modul)
@@ -27,24 +34,40 @@ module ActiveRecord
       end
     end
 
-    # Return a mutex implementation for the mutex named +name+.
+    # The for method returns an instance of
+    # ActiveRecord::DatabaseMutex::Implementation that is initialized with the
+    # given name.
+    #
+    # @param name [ String ] the mutex name
+    #
+    # @return [ ActiveRecord::DatabaseMutex::Implementation ]
     def self.for(name)
       Implementation.new(name: name)
     end
 
     module ClassMethods
-      # Returns a mutex instance for this ActiveRecord subclass.
+      def mutex_name
+        @mutex_name ||= [ name, defined?(Rails) ? Rails.env : ENV['RAILS_ENV'] ].compact * ?@
+      end
+
+      # The mutex method returns an instance of
+      # ActiveRecord::DatabaseMutex::Implementation that is initialized with
+      # the name given by the class and environment variables.
+      #
+      # @return [ActiveRecord::DatabaseMutex::Implementation] the mutex instance
       def mutex
-        @mutex ||= Implementation.new(
-          name: [ name, defined?(Rails) ? Rails.env : ENV['RAILS_ENV'] ].compact * ?@
-        )
+        @mutex ||= Implementation.new(name: mutex_name)
       end
     end
 
-    # Returns a mutex instance for this ActiveRecord instance.
+    # The mutex method returns an instance of
+    # ActiveRecord::DatabaseMutex::Implementation that is initialized with the
+    # name given by the id, the class and environment variables.
+    #
+    # @return [ActiveRecord::DatabaseMutex::Implementation] the mutex instance
     def mutex
       if persisted?
-        @mutex ||= Implementation.new(name: "#{id}@#{self.class.name}")
+        @mutex ||= Implementation.new(name: "#{id}@#{self.class.mutex_name}")
       else
         raise MutexInvalidState, "instance #{inspect} not persisted"
       end
