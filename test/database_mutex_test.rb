@@ -214,10 +214,10 @@ class DatabaseMutexTest < Test::Unit::TestCase
     until done
       sleep 0.1
     end
-    mutex.synchronize(nonblock: true) { yielded  = true }
+    mutex.synchronize(block: false) { yielded  = true }
     assert_false yielded
     thread.join
-    mutex.synchronize(nonblock: true) { yielded  = true }
+    mutex.synchronize(block: false) { yielded  = true }
     assert yielded
   end
 

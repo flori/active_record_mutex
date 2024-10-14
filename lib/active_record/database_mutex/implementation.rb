@@ -37,10 +37,10 @@ module ActiveRecord
       # and executes the block passed to it. If the lock is already held by another
       # thread, this method will return nil instead of raising an exception.
       #
-      # The :nonblock and :timeout options are passed to the lock method,
+      # The :block and :timeout options are passed to the lock method,
       # and the the :force option to the unlock method.
       def synchronize(opts = {})
-        locked = lock(opts.slice(:nonblock, :timeout)) or return
+        locked = lock(opts.slice(:block, :timeout)) or return
         yield
       rescue ActiveRecord::DatabaseMutex::MutexLocked
         return nil
@@ -51,24 +51,24 @@ module ActiveRecord
       # The lock method attempts to acquire the mutex lock for the given name
       # and returns true if successful. Note that you can lock the mutex
       # n-times, but it has to be unlocked n-times to be released as well.
-      # If the :nonblock option was given, it returns false instead of raising
-      # MutexLocked exception when unable to acquire lock without blocking.
+      # If the :block option was given as false, it returns false instead of
+      # raising MutexLocked exception when unable to acquire lock without blocking.
       # If a :timeout option with the (nonnegative) timeout in seconds was
       # given, a MutexLocked exception is raised after this time, otherwise the
-      # method blocks # forever.
+      # method blocks forever.
       # If :raise option is given as false, no MutexLocked exception is raised,
       # but false is returned.
       def lock(opts = {})
-        opts = { raise: true }.merge(opts)
-        if opts[:nonblock]
+        opts = { block: true, raise: true }.merge(opts)
+        if opts[:block]
+          timeout = opts[:timeout] || -1
+          lock_with_timeout timeout:
+        else
           begin
             lock_with_timeout timeout: 0
           rescue MutexLocked
             false # If non-blocking and unable to acquire lock, return false.
           end
-        else
-          timeout = opts[:timeout] || -1
-          lock_with_timeout timeout:
         end
       rescue MutexLocked
         if opts[:raise]
