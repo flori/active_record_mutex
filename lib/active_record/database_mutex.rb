@@ -29,14 +29,14 @@ module ActiveRecord
 
     # Return a mutex implementation for the mutex named +name+.
     def self.for(name)
-      Implementation.new(:name => name)
+      Implementation.new(name: name)
     end
 
     module ClassMethods
       # Returns a mutex instance for this ActiveRecord subclass.
       def mutex
         @mutex ||= Implementation.new(
-          :name => [ name, defined?(Rails) ? Rails.env : ENV['RAILS_ENV'] ].compact * ?@
+          name: [ name, defined?(Rails) ? Rails.env : ENV['RAILS_ENV'] ].compact * ?@
         )
       end
     end
@@ -44,7 +44,7 @@ module ActiveRecord
     # Returns a mutex instance for this ActiveRecord instance.
     def mutex
       if persisted?
-        @mutex ||= Implementation.new(:name => "#{id}@#{self.class.name}")
+        @mutex ||= Implementation.new(name: "#{id}@#{self.class.name}")
       else
         raise MutexInvalidState, "instance #{inspect} not persisted"
       end
