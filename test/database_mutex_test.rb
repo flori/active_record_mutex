@@ -75,6 +75,55 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_equal 2, mutex.send(:counter_value)
   end
 
+  def test_lock_with_timeout
+    done = false
+    thread = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        Implementation.new(:name => 'LockTimeout').synchronize {
+          done = true
+          sleep 2
+        }
+      end
+    ensure
+      done = true
+    end
+    mutex = Implementation.new(:name => 'LockTimeout')
+    until done
+      sleep 0.1
+    end
+    assert_raises(ActiveRecord::DatabaseMutex::MutexLocked) { mutex.lock(timeout: 1) }
+    thread.join
+    assert mutex.unlocked?
+    assert_false mutex.aquired_lock?
+    assert_equal 0, mutex.send(:counter_value)
+    assert mutex.lock(timeout: 1)
+    assert mutex.locked?
+    assert mutex.aquired_lock?
+    assert_equal 1, mutex.send(:counter_value)
+  end
+
+  def test_lock_with_spin_timeout
+    done = false
+    thread = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        Implementation.new(:name => 'SpinTimeout').synchronize {
+          done = true
+          sleep 2
+        }
+      end
+    ensure
+      done = true
+    end
+    mutex = Implementation.new(:name => 'SpinTimeout')
+    until done
+      sleep 0.1
+    end
+    assert mutex.lock(spin_timeout: 1)
+    assert mutex.locked?
+    assert mutex.aquired_lock?
+    assert_equal 1, mutex.send(:counter_value)
+  end
+
   def test_unlock
     mutex = Implementation.new(:name => 'Unlock')
     assert_raises(ActiveRecord::DatabaseMutex::MutexUnlockFailed) { mutex.unlock }
@@ -90,6 +139,21 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_raises(ActiveRecord::DatabaseMutex::MutexUnlockFailed) { mutex.unlock }
   end
 
+  def test_unlock?
+    mutex = Implementation.new(:name => 'Unlock')
+    assert_nil mutex.unlock?
+    assert_equal 0, mutex.send(:counter_value)
+    assert mutex.lock
+    assert mutex.locked?
+    assert mutex.aquired_lock?
+    assert_equal 1, mutex.send(:counter_value)
+    assert mutex.unlock?
+    assert mutex.unlocked?
+    assert mutex.not_aquired_lock?
+    assert_equal 0, mutex.send(:counter_value)
+    assert_nil mutex.unlock?
+  end
+
   def test_synchronize
     mutex = Implementation.new(:name => 'Sync1')
     assert mutex.unlocked?
@@ -100,6 +164,30 @@ class DatabaseMutexTest < Test::Unit::TestCase
     end
     assert mutex.unlocked?
     assert_equal 0, mutex.send(:counter_value)
+  end
+
+  def test_synchronize_two_threads
+    done = false
+    thread = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        Implementation.new(:name => 'Sync1').synchronize {
+          done = true
+          sleep 2
+        }
+      end
+    ensure
+      done = true
+    end
+    mutex = Implementation.new(:name => 'Sync1')
+    yielded = false
+    until done
+      sleep 0.1
+    end
+    mutex.synchronize(nonblock: true) { yielded  = true }
+    assert_false yielded
+    thread.join
+    mutex.synchronize(nonblock: true) { yielded  = true }
+    assert yielded
   end
 
   def test_synchronize_exception
