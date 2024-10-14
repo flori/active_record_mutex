@@ -1,0 +1,20 @@
+dockerfile: |-
+  RUN apk add --no-cache build-base git mariadb-client mariadb-dev
+  RUN gem update --system
+  RUN gem install gem_hadar bundler
+
+script: &script |-
+  echo -e "\e[1m"
+  ruby -v
+  echo -e "\e[0m"
+  bundle install --full-index
+  bundle exec rake test
+
+fail_fast: yes
+
+env:
+  - DATABASE_URL=mysql2://root@host.docker.internal:3336/test
+
+images:
+  ruby:3.3-alpine: *script
+  ruby:3.2-alpine: *script

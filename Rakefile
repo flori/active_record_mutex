@@ -14,13 +14,15 @@ GemHadar do
   test_dir    'test'
   ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock', '.DS_Store', 'coverage',
     '.byebug_history'
-  package_ignore '.gitignore', 'VERSION', *Dir.glob('.github/**/*', File::FNM_DOTMATCH)
+	package_ignore '.all_images.yml', '.gitignore', 'VERSION',
+		*Dir.glob('.github/**/*', File::FNM_DOTMATCH)
   readme      'README.md'
   licenses    << 'GPL-2'
 
   dependency             'mysql2',       '~> 0.3'
   dependency             'activerecord', '>= 4.0'
   dependency             'tins',         '~> 1.12'
+	development_dependency 'all_images',   '~> 0.6'
   development_dependency 'test-unit',    '~> 3.0'
   development_dependency 'debug'
   development_dependency 'simplecov'
