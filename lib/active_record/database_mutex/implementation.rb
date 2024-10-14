@@ -6,10 +6,14 @@ module ActiveRecord
     class Implementation
 
       class << self
+
+        # The db method returns an instance of ActiveRecord::Base.connection
         def db
           ActiveRecord::Base.connection
         end
 
+        # The check_size? method returns true when the MySQL version is 5.7 or
+        # higher.
         def check_size?
           if defined? @check_size
             @check_size
@@ -57,19 +61,24 @@ module ActiveRecord
       # already locked and the timeout in seconds is given as the :timeout
       # option, this method raises a MutexLocked exception after that many
       # seconds. If the :timeout option wasn't given, this method blocks until
-      # the lock could be aquired.
+      # the lock could be aquired. The :nonblock option can be used to return
+      # immediately if the lock cannot be acquired without blocking. When using
+      # the spinlock approach with spin_timeout, it will wait for that many
+      # seconds before attempting to acquire the lock; if unsuccessful, it will
+      # retry indefinitely.
       def lock(opts = {})
-        if opts[:nonblock] # XXX document
+        if opts[:nonblock]
           begin
-            lock_with_timeout :timeout => 0
+            lock_with_timeout timeout: 0
           rescue MutexLocked
+            false # If non-blocking and unable to acquire lock, return false.
           end
         elsif opts[:timeout]
           lock_with_timeout opts
         else
-          spin_timeout = opts[:spin_timeout] || 1 # XXX document
+          spin_timeout = opts[:spin_timeout] || 1
           begin
-            lock_with_timeout :timeout => spin_timeout
+            lock_with_timeout timeout: spin_timeout
           rescue MutexLocked
             retry
           end
@@ -132,34 +141,56 @@ module ActiveRecord
 
       private
 
+      # The quote method returns a string that is suitable for inclusion in an
+      # SQL query as the value of a parameter.
       def quote(value)
         ActiveRecord::Base.connection.quote(value)
       end
 
+      # The counter method generates a unique name for the mutex's internal
+      # counter variable. This name is used as part of the SQL query to set
+      # and retrieve the counter value. A MutexInvalidState exception is
+      # raised for mysql >= 5.7 the counter name is # longer than 64
+      # characters.
       def counter
         encoded_name = ?$ + Base64.encode64(name).delete('^A-Za-z0-9+/').
           gsub(/[+\/]/, ?+ => ?_, ?/ => ?.)
-        if !self.class.check_size? || encoded_name.size <= 64 # mysql 5.7 only allows size <=64 variable names
+        if !self.class.check_size? || encoded_name.size <= 64
           "@#{encoded_name}"
+        else
+          raise MutexInvalidState, "counter name too long: >64 characters"
         end
       end
 
+      # The increase_counter method increments the internal counter value for
+      # this mutex instance.
       def increase_counter
         query("SET #{counter} = IF(#{counter} IS NULL OR #{counter} = 0, 1, #{counter} + 1)")
       end
 
+      # The decrease_counter method decrements the internal counter value for #
+      # this mutex instance.
       def decrease_counter
         query("SET #{counter} = #{counter} - 1")
       end
 
+      # The counter_value method returns the current value of the internal
+      # counter variable for this mutex instance as an integer number.
       def counter_value
         query("SELECT #{counter}").to_i
       end
 
+      # The counter_zero? method returns true if the internal counter value for
+      # this mutex instance is zero, otherwise false.
       def counter_zero?
         counter_value.zero?
       end
 
+      # The lock_with_timeout method attempts to acquire the mutex lock for
+      # the given name and returns true if successful. If the mutex is already
+      # locked by another database connection, it raises a MutexLocked
+      # exception after the specified timeout period. A MutexSystemError is
+      # raised if system error occurs while acquiring lock.
       def lock_with_timeout(opts = {})
         if aquired_lock?
           increase_counter
@@ -178,6 +209,8 @@ module ActiveRecord
         end
       end
 
+      # The query method executes an SQL statement +sql+ and returns the
+      # result.
       def query(sql)
         if result = self.class.db.execute(sql)
           result = result.first.first.to_i
@@ -190,4 +223,3 @@ module ActiveRecord
     end
   end
 end
-
