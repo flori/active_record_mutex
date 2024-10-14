@@ -10,35 +10,39 @@ ruby processes (also on different hosts) via the connected database.
 
 You can use rubygems to fetch the gem and install it for you:
 
-    # gem install active_record_mutex
-
-You can also put this line into your Rails environment.rb file
-
-    config.gem 'active_record_mutex'
-
-and install the gem via
-
-    $ rake gems:install
+```
+# gem install active_record_mutex
+```
 
 ## Usage
 
-If you want to synchronize method calls to your model's methods you can easily
-do this by passing a mutex instance to ActiveRecord's synchronize class method.
-This mutex instance will be named Foo like the ActiveRecord was named:
+To synchronize on a specific ActiveRecord instance you can do this:
 
-  class Foo < ActiveRecord::Base
-    def foo
-    end
+```ruby
+class Foo < ActiveRecord::Base
+end
 
-    synchronize :foo, :with => :mutex
-  end
+foo = Foo.find(666)
+foo.mutex.synchronize do
+  # Critical section of code here
+end
+```
 
 If you want more control over the mutex and/or give it a special name you can
 create Mutex instance like this:
 
-    my_mutex = ActiveRecord::Mutex::Mutex.new(:name => 'my_mutex')
+```ruby
+my_mutex = ActiveRecord::DatabaseMutex.for('my_mutex')
+```
 
-Now you can send all messages directly to the Mutex instance.
+Now you can send all messages directly to the Mutex instance or use the custom
+mutex instance to `synchronize` method calls or other operations:
+
+```ruby
+my_mutex.synchronize do
+  # Critical section of code here
+end
+```
 
 ## Download
 

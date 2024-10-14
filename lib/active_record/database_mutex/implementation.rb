@@ -54,8 +54,8 @@ module ActiveRecord
       # If the :nonblock option was given, it returns false instead of raising
       # MutexLocked exception when unable to acquire lock without blocking.
       # If a :timeout option with the (nonnegative) timeout in seconds was
-      # given, a MutexLocked exception is raised, otherwise the method blocks
-      # forever.
+      # given, a MutexLocked exception is raised after this time, otherwise the
+      # method blocks # forever.
       def lock(opts = {})
         if opts[:nonblock]
           begin
