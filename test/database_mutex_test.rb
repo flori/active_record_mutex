@@ -239,6 +239,6 @@ class DatabaseMutexTest < Test::Unit::TestCase
 
   def test_counter_name
     mutex = Implementation.new(:name => (250..255).map(&:chr) * '')
-    assert_equal '@$_vv8.f7.', mutex.send(:counter)
+    assert_equal '@$vVdIUh1D1Jbjt5.6.4gAyQ', mutex.send(:counter)
   end
 end

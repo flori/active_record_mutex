@@ -1,4 +1,4 @@
-require 'base64'
+require 'digest/md5'
 require 'tins/xt/string_version'
 
 module ActiveRecord
@@ -153,7 +153,7 @@ module ActiveRecord
       # raised for mysql >= 5.7 the counter name is # longer than 64
       # characters.
       def counter
-        encoded_name = ?$ + Base64.encode64(name).delete('^A-Za-z0-9+/').
+        encoded_name = ?$ + Digest::MD5.base64digest(name).delete('^A-Za-z0-9+/').
           gsub(/[+\/]/, ?+ => ?_, ?/ => ?.)
         if !self.class.check_size? || encoded_name.size <= 64
           "@#{encoded_name}"
