@@ -17,10 +17,10 @@ GemHadar do
   readme      'README.md'
   licenses    << 'GPL-2'
 
-  dependency             'mysql2',       '~>0.3.0'
-  dependency             'activerecord', '>= 4.0', '<6'
+  dependency             'mysql2',       '~> 0.3'
+  dependency             'activerecord', '>= 4.0'
   dependency             'tins',         '~> 1.12'
-  development_dependency 'test-unit',    '~>3.0'
-  development_dependency 'byebug'
+  development_dependency 'test-unit',    '~> 3.0'
+  development_dependency 'debug'
   development_dependency 'simplecov'
 end
