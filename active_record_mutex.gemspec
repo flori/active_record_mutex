@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Florian Frank".freeze]
-  s.date = "2024-10-14"
+  s.date = "2024-10-15"
   s.description = "Mutex that can be used to synchronise ruby processes via an ActiveRecord datababase connection. (Only Mysql is supported at the moment.)".freeze
   s.email = "flori@ping.de".freeze
   s.extra_rdoc_files = ["README.md".freeze, "lib/active_record/database_mutex.rb".freeze, "lib/active_record/database_mutex/implementation.rb".freeze, "lib/active_record/database_mutex/version.rb".freeze, "lib/active_record/mutex.rb".freeze, "lib/active_record_mutex.rb".freeze]

@@ -11,7 +11,14 @@ module ActiveRecord
         end
       end
 
-      # Creates a mutex with the name given with the option :name.
+      # The initialize method initializes an instance of the DatabaseMutex
+      # class by setting its name and internal_name attributes.
+      #
+      # @param opts [ Hash ] options hash containing the **name** key
+      #
+      # @option opts name [ String ] name for the mutex, required.
+      #
+      # @raise [ ArgumentError ] if no **name** option is provided in the options hash.
       def initialize(opts = {})
         @name = opts[:name] or raise ArgumentError, "mutex requires a :name argument"
         internal_name # create/check internal_name
@@ -20,7 +27,10 @@ module ActiveRecord
       # Returns the name of this mutex as given via the constructor argument.
       attr_reader :name
 
-      # Return of internal name for this mutex of length < 64 characters.
+      # The internal_name method generates an encoded name for this mutex
+      # instance based on its class and {name} attributes and memoizes it.
+      #
+      # @return [ String ] the encoded name of length <= 64 characters
       def internal_name
         @internal_name and return @internal_name
         encoded_name = ?$ + Digest::MD5.base64digest([ self.class.name, name ] * ?#).
@@ -33,12 +43,20 @@ module ActiveRecord
         end
       end
 
-      # The synchronize method attempts to acquire the mutex lock for the given name
-      # and executes the block passed to it. If the lock is already held by another
-      # thread, this method will return nil instead of raising an exception.
+      # The synchronize method attempts to acquire the mutex lock for the given
+      # name and executes the block passed to it. If the lock is already held
+      # by another database connection, this method will return nil instead of
+      # raising an exception.
       #
-      # The :block and :timeout options are passed to the lock method,
-      # and the the :force option to the unlock method.
+      # The **block** and **timeout** options are passed to the {lock}
+      # method, and the the **force** option to the {unlock} method.
+      #
+      # @param opts [ Hash ] options hash containing the **block**, **timeout**, or **force** keys
+      #
+      # @yield [ result ] the block to be executed while holding the mutex lock
+      #
+      # @return [ nil or result of yielded block ] depending on whether lock
+      # was acquired
       def synchronize(opts = {})
         locked = lock(opts.slice(:block, :timeout)) or return
         yield
@@ -48,16 +66,27 @@ module ActiveRecord
         locked and unlock opts.slice(:force)
       end
 
-      # The lock method attempts to acquire the mutex lock for the given name
-      # and returns true if successful. Note that you can lock the mutex
+      # The lock method attempts to acquire the mutex lock for the configured
+      # name and returns true if successful. Note that you can lock the mutex
       # n-times, but it has to be unlocked n-times to be released as well.
-      # If the :block option was given as false, it returns false instead of
+      #
+      # If the **block** option was given as false, it returns false instead of
       # raising MutexLocked exception when unable to acquire lock without blocking.
-      # If a :timeout option with the (nonnegative) timeout in seconds was
+      #
+      # If a **timeout** option with the (nonnegative) timeout in seconds was
       # given, a MutexLocked exception is raised after this time, otherwise the
       # method blocks forever.
-      # If :raise option is given as false, no MutexLocked exception is raised,
+      #
+      # If the **raise** option is given as false, no MutexLocked exception is raised,
       # but false is returned.
+      #
+      # @param opts [ Hash ] the options hash
+      #
+      # @option opts [ true, false ] block, defaults to true
+      # @option opts [ true, false ] raise, defaults to true
+      # @option opts [ Integer, nil ] timeout, defaults to nil, which means wait forever
+      #
+      # @return [ true, false ] depending on whether lock was acquired
       def lock(opts = {})
         opts = { block: true, raise: true }.merge(opts)
         if opts[:block]
@@ -78,21 +107,26 @@ module ActiveRecord
         end
       end
 
-      # Unlocks the mutex and returns true iff successful (= was unlocked as
-      # many times as locked in this db connection). If the :force option was
-      # given the lock is released anyway and true is returned.
-      #
-      # If the lock doesn't belong to this connection raises a MutexUnlockFailed
+      # The unlock method releases the mutex lock for the given name and
+      # returns true if successful. If the lock doesn't belong to this
+      # connection raises a MutexUnlockFailed
       # exception.
-      # If :raise option is given as false, no MutexUnlockFailed exception is
-      # raised, but false is returned.
+      #
+      # @param opts [ Hash ] the options hash
+      #
+      # @option opts [ true, false ] raise if false won't raise MutexUnlockFailed, defaults to true
+      # @option opts [ true, false ] force if true will force the lock to open, defaults to false
+      #
+      # @raise [ MutexUnlockFailed ] if unlocking failed and raise was true
+      #
+      # @return [ true, false ] true if unlocking was successful, false otherwise
       def unlock(opts = {})
-        opts = { raise: true }.merge(opts)
-        if acquired_lock?
+        opts = { raise: true, force: false }.merge(opts)
+        if owned?
           if opts[:force]
             reset_counter
           else
-            decrease_counter
+            decrement_counter
           end
           if counter_zero?
             case query("SELECT RELEASE_LOCK(#{quote(internal_name)})")
@@ -115,36 +149,46 @@ module ActiveRecord
         end
       end
 
-      # Unlock this mutex and return self if successful, otherwise (the mutex
-      # was not locked, is still locked or doesn't belong the the connection)
-      # nil is returned.
+      # The unlock? method returns self if the mutex is successfully unlocked,
+      # otherwise it returns nil.
+      #
+      # @return [self, nil] self if the mutex was unlocked, nil otherwise
       def unlock?(*a)
         self if unlock(*a)
       rescue MutexUnlockFailed
         nil
       end
 
-      # Returns true if this mutex is unlocked at the moment.
+      # The unlocked? method checks whether the mutex is currently free and not
+      # locked by any database connection.
+      #
+      # @return [ true, false ] true if the mutex is unlocked, false otherwise
       def unlocked?
         query("SELECT IS_FREE_LOCK(#{quote(internal_name)})") == 1
       end
 
-      # Returns true if this mutex is locked at the moment.
+      # The locked? method returns true if this mutex is currently locked by
+      # any database connection.
+      #
+      # @return [ true, false ] true if the mutex is locked, false otherwise
       def locked?
         not unlocked?
       end
 
-      # Returns true if this mutex is locked by this database connection.
-      def acquired_lock?
+      # Returns true if the mutex is was acquired on this database connection.
+      def owned?
         query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{quote(internal_name)})") == 1
       end
 
-      # Returns true if this mutex is not locked by this database connection.
-      def not_acquired_lock?
-        not acquired_lock?
+      # Returns true if this mutex was not acquired on this database connection.
+      def not_owned?
+        not owned?
       end
 
-      # Returns a string representation of this DatabaseMutex instance.
+      # The to_s method returns a string representation of this DatabaseMutex
+      # instance.
+      #
+      # @return [ String ] the string representation of this DatabaseMutex instance
       def to_s
         "#<#{self.class} #{name}>"
       end
@@ -155,26 +199,32 @@ module ActiveRecord
 
       # The quote method returns a string that is suitable for inclusion in an
       # SQL query as the value of a parameter.
+      #
+      # @param value [ Object ] the object to be quoted
+      #
+      # @return [ String ] the quoted string
       def quote(value)
         ActiveRecord::Base.connection.quote(value)
       end
 
       # The counter method generates a unique name for the mutex's internal
-      # counter variable. This name is used as part of the SQL query to set
-      # and retrieve the counter value.
+      # counter variable. This name is used as part of the SQL query to set and
+      # retrieve the counter value.
+      #
+      # @return [String] the unique name for the mutex's internal counter variable.
       def counter
         "@#{internal_name}"
       end
 
-      # The increase_counter method increments the internal counter value for
+      # The increment_counter method increments the internal counter value for
       # this mutex instance.
-      def increase_counter
+      def increment_counter
         query("SET #{counter} = IF(#{counter} IS NULL OR #{counter} = 0, 1, #{counter} + 1)")
       end
 
-      # The decrease_counter method decrements the internal counter value for #
+      # The decrement_counter method decrements the internal counter value for #
       # this mutex instance.
-      def decrease_counter
+      def decrement_counter
         query("SET #{counter} = #{counter} - 1")
       end
 
@@ -186,31 +236,45 @@ module ActiveRecord
 
       # The counter_value method returns the current value of the internal
       # counter variable for this mutex instance as an integer number.
+      #
+      # @return [ Integer ] the current value of the internal counter variable
       def counter_value
         query("SELECT #{counter}").to_i
       end
 
-      # The counter_zero? method returns true if the internal counter value for
-      # this mutex instance is zero, otherwise false.
+      # The counter_zero? method checks whether the internal counter value for
+      # this mutex instance is zero.
+      #
+      # @return [ true, false ] true if the counter value is zero, false otherwise
       def counter_zero?
         counter_value.zero?
       end
 
       # The lock_with_timeout method attempts to acquire the mutex lock for the
-      # given name and returns true if successful. If the :timeout option was
-      # given, it raises a MutexLocked exception if unable to acquire lock
-      # within that time period, otherwise the method blocks forever. It raises
-      # an ArgumentError if the timeout option wasn't provided, a
-      # MutexSystemError if a system error occured.
+      # given name and returns true if successful.
+      #
+      # If the :timeout option was given as a nonnegative value of seconds, it
+      # raises a MutexLocked exception if unable to acquire lock within that
+      # time period, otherwise the method blocks forever.
+      #
+      # @param opts [ Hash ] options hash containing the :timeout key
+      #
+      # @option opts [ Integer ] timeout, defaults to nil, but is required
+      #
+      # @raise [ ArgumentError ] if no :timeout option is provided in the options hash
+      # @raise [ MutexLocked ] if the mutex is already locked in another database connection
+      # @raise [ MutexSystemError ] if a system error occured
+      #
+      # @return [ true, false ] depending on whether lock was acquired
       def lock_with_timeout(opts = {})
         timeout = opts.fetch(:timeout) { raise ArgumentError, 'require :timeout argument' }
-        if acquired_lock?
-          increase_counter
+        if owned?
+          increment_counter
           true
         else
           case query("SELECT GET_LOCK(#{quote(internal_name)}, #{timeout})")
           when 1
-            increase_counter
+            increment_counter
             true
           when 0
             raise MutexLocked, "mutex '#{name}' is already locked"
@@ -220,8 +284,12 @@ module ActiveRecord
         end
       end
 
-      # The query method executes an SQL statement +sql+ and returns the
-      # result.
+      # The query method executes an SQL statement and returns the result.
+      #
+      # @param sql [ String ] the SQL statement to be executed
+      #
+      # @return [ Integer, nil ] the result of the SQL execution or nil if it
+      # failed
       def query(sql)
         if result = self.class.db.execute(sql)
           result = result.first.first.to_i
