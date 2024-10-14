@@ -14,6 +14,7 @@ GemHadar do
   test_dir    'test'
   ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock', '.DS_Store', 'coverage',
     '.byebug_history'
+  package_ignore '.gitignore', 'VERSION', *Dir.glob('.github/**/*', File::FNM_DOTMATCH)
   readme      'README.md'
   licenses    << 'GPL-2'
 
