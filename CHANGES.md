@@ -1,35 +1,57 @@
 # Changes
 
-## 2024-10-14 v3.0.0
+## 2024-10-15 v3.0.0
+
+
+### Major Enhancements
+
+* **Renamed method names**: Updated `acquired_lock?` to `owned?` and
+  `not_aquired_lock?` to `not_owned?` to better reflect their functionality.
+* **Enhanced documentation**: Improved documentation for several methods,
+  providing clearer explanations of their purpose and behavior.
+* **Synchronize method updates**: The synchronize method now accepts a `:block`
+  option instead of `:nonblock`, allowing for more flexibility in locking and
+  unlocking mutexes. Additionally, the `lock` method has been updated to handle
+  this new option.
 
 ### New Features
 
-*   **Improved Mutex Name Generation**: Introduced the `internal_name` method
-to generate internal mutex names, replacing the previous encoded name approach.
+* **Timeout handling**: Introduced the `:raise` option to the lock method,
+  which defaults to true. If set to false, no MutexLocked exception is raised
+  when the timeout expires.
+* **Internal name generation**: Added the `internal_name` method for generating
+  internal mutex names, replacing encoded names in counter logic.
+* **Improved unlock behavior**: Modified the unlock method to raise
+  MutexUnlockFailed if the lock doesn't belong to this connection or return
+  false if `:raise` is false.
 
-*   **Enhanced Counter Logic**: Updated the `counter` method to use
-`internal_name`, ensuring accurate counter values.
+### Refactorings
 
-*   **Support for all_images**: Added support for the `all_images` gem,
-enabling seamless integration with multiple Ruby versions.
+* **Simplified database setup**: Updated test helper to use a more
+  straightforward approach for setting up databases.
+* **Ensured counter length**: Added checks to ensure counter names are within
+  the allowed range, preventing potential issues with MySQL variable name
+  lengths.
+* **Refactored support for DATABASE_URL**: Improved support for the
+  `DATABASE_URL` environment variable in tests.
 
-*   **Docker Compose Support**: Included a `docker-compose.yml` file for
-streamlined testing and development, allowing users to easily set up a test
-environment.
+### Other Changes
 
-*   **direnv Integration**: Integrated direnv for simplified configuration
-management, ensuring a consistent and reliable testing experience.
+* **Updated documentation**: Reflected current gem installation methods and API
+  changes in README.md.
+* **Improved testing**: Added test cases for lock acquisition, release, and
+  timeout handling, as well as multiple threads scenarios.
+* **Removed Travis CI config**: Removed configuration files related to Ruby
+  versioning and CodeClimate reporting.
 
-### Documentation and Testing
+### Documentation Updates
 
-*   **Thread-Safe Testing**: Added tests for multiple thread synchronization
-using the `synchronize` method with nonblock option.
-
-*   **Improved Test Cases**: Updated test cases for lock acquisition, release,
-and timeout handling.
-
-*   **Additional Documentation**: Added more documentation comments to enhance
-understanding.
+* **Added CHANGES.md file**: Included a changelog file to keep track of changes
+  across releases.
+* **Refactored database mutex documentation**: Improved documentation for
+  methods and exception classes.
+* **Updated test cases**: Updated example usage, test updates, and refactorings
+  related to the `DATABASE_URL` environment variable.
 
 ## 2016-12-07 v2.5.1
 
