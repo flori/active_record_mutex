@@ -9,12 +9,13 @@ module ActiveRecord
     # This is the base exception of all mutex exceptions.
     class MutexError < ActiveRecordError; end
 
-    # This exception is raised if a mutex of the given name isn't locked at the
-    # moment and unlock was called.
+    # This exception is raised when an attempt to unlock a mutex fails,
+    # typically due to the lock not being held by the current database
+    # connection or other system errors.
     class MutexUnlockFailed < MutexError; end
 
-    # This exception is raised if a mutex of the given name is locked at the
-    # moment and lock was called again.
+    # This exception is raised when attempting to acquire a lock that is
+    # already held by another database connection.
     class MutexLocked < MutexError; end
 
     # This exception raised when an unexpected situation occurs while managing
