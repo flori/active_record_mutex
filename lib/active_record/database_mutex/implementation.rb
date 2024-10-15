@@ -43,20 +43,38 @@ module ActiveRecord
         end
       end
 
-      # The synchronize method attempts to acquire the mutex lock for the given
-      # name and executes the block passed to it. If the lock is already held
-      # by another database connection, this method will return nil instead of
-      # raising an exception.
-      #
-      # The **block** and **timeout** options are passed to the {lock}
-      # method, and the the **force** option to the {unlock} method.
-      #
-      # @param opts [ Hash ] options hash containing the **block**, **timeout**, or **force** keys
-      #
-      # @yield [ result ] the block to be executed while holding the mutex lock
-      #
-      # @return [ nil or result of yielded block ] depending on whether lock
-      # was acquired
+			# The synchronize method attempts to acquire a mutex lock for the given name
+			# and executes the block passed to it. If the lock is already held by another
+			# database connection, this method will return nil instead of raising an
+			# exception and not execute the block. #
+			#
+			# This method provides a convenient way to ensure that critical sections of code
+			# are executed while holding the mutex lock. It attempts to acquire the lock using
+			# the underlying locking mechanisms (such as {lock} and {unlock}) and executes
+			# the block passed to it.
+			#
+			# The **block** and **timeout** options are passed to the {lock} method
+			# and configure the way the lock is acquired.
+			#
+			# The **force** option is passed to the {unlock} method, which will force the
+			# lock to open if true.
+			#
+			# @example
+			#   foo.mutex.synchronize { do_something_with foo } # wait forever and never give up
+			#
+			# @example
+			#   foo.mutex.synchronize(timeout: 5) { do_something_with foo } # wait 5s and give up
+			#
+			# @example
+			#   unless foo.mutex.synchronize(block: false) { do_something_with foo }
+			#     # try again later
+			#   end
+			#
+			# @param opts [ Hash ] Options hash containing the **block**, **timeout**, or **force** keys
+			#
+			# @yield [ Result ] The block to be executed while holding the mutex lock
+			#
+			# @return [ Nil or result of yielded block ] depending on whether the lock was acquired
       def synchronize(opts = {})
         locked = lock(opts.slice(:block, :timeout)) or return
         yield
@@ -67,8 +85,9 @@ module ActiveRecord
       end
 
       # The lock method attempts to acquire the mutex lock for the configured
-      # name and returns true if successful. Note that you can lock the mutex
-      # n-times, but it has to be unlocked n-times to be released as well.
+      # name and returns true if successful, that means #{locked?} and
+      # #{owned?} will be true. Note that you can lock the mutex n-times, but
+      # it has to be unlocked n-times to be released as well.
       #
       # If the **block** option was given as false, it returns false instead of
       # raising MutexLocked exception when unable to acquire lock without blocking.
@@ -109,8 +128,7 @@ module ActiveRecord
 
       # The unlock method releases the mutex lock for the given name and
       # returns true if successful. If the lock doesn't belong to this
-      # connection raises a MutexUnlockFailed
-      # exception.
+      # connection raises a MutexUnlockFailed exception.
       #
       # @param opts [ Hash ] the options hash
       #
@@ -149,14 +167,13 @@ module ActiveRecord
         end
       end
 
-      # The unlock? method returns self if the mutex is successfully unlocked,
-      # otherwise it returns nil.
+      # The unlock? method returns self if the mutex could successfully
+      # unlocked, otherwise it returns nil.
       #
       # @return [self, nil] self if the mutex was unlocked, nil otherwise
-      def unlock?(*a)
-        self if unlock(*a)
-      rescue MutexUnlockFailed
-        nil
+      def unlock?(opts = {})
+        opts = { raise: false }.merge(opts)
+        self if unlock(opts)
       end
 
       # The unlocked? method checks whether the mutex is currently free and not
@@ -168,7 +185,7 @@ module ActiveRecord
       end
 
       # The locked? method returns true if this mutex is currently locked by
-      # any database connection.
+      # any database connection, the opposite of {unlocked?}.
       #
       # @return [ true, false ] true if the mutex is locked, false otherwise
       def locked?
@@ -180,7 +197,8 @@ module ActiveRecord
         query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{quote(internal_name)})") == 1
       end
 
-      # Returns true if this mutex was not acquired on this database connection.
+      # Returns true if this mutex was not acquired on this database connection,
+      # the opposite of {owned?}.
       def not_owned?
         not owned?
       end
