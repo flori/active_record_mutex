@@ -1,5 +1,19 @@
 # Changes
 
+## 2024-10-16 v3.2.1
+
+* Refactor DatabaseMutex implementation:
+  * Change `@name` and `mutex.name` to downcase and freeze values
+  * Update tests to reflect new behavior
+
+## 2024-10-16 v3.2.0
+
+* DatabaseMutex improvements:
+  * Improved lock name generation in `lock_name` method.
+  * Modified SQL queries to use `lock_name` instead of `internal_name`.
+  * Added `lock_exists?` and `test_all_mutexes` methods for testing mutex
+    creation and querying.
+
 ## 2024-10-16 v3.1.0
 
 * Changes for **3.1.0**:
