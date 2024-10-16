@@ -55,6 +55,22 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
   end
 
+  private def lock_exists?(string)
+    ActiveRecord::Base.all_mutexes.map(&:OBJECT_NAME).any? {
+      _1.include?(string)
+    }
+  end
+
+  def test_all_mutexes
+    string = SecureRandom.hex(16)
+    mutex = ActiveRecord::DatabaseMutex.for(string)
+    assert_false lock_exists?(string)
+    mutex.lock
+    assert lock_exists?(string)
+  ensure
+    mutex.unlock force: true
+  end
+
   def test_create
     mutex = Implementation.new(:name => 'Create')
     assert_equal 'Create', mutex.name

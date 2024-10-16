@@ -76,7 +76,7 @@ module ActiveRecord
         connection.select_all(<<~EOT).map { MutexInfo.new(_1) }
           SELECT * FROM performance_schema.metadata_locks
           WHERE OBJECT_TYPE = 'USER LEVEL LOCK'
-          AND OBJECT_NAME LIKE "$%"
+          AND OBJECT_NAME LIKE "%=$%"
         EOT
       end
     end

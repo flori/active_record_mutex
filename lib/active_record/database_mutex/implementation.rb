@@ -20,7 +20,8 @@ module ActiveRecord
       #
       # @raise [ ArgumentError ] if no **name** option is provided in the options hash.
       def initialize(opts = {})
-        @name = opts[:name] or raise ArgumentError, "mutex requires a :name argument"
+        @name = opts[:name].to_s
+        @name.size != 0 or raise ArgumentError, "mutex requires a nonempty :name argument"
         internal_name # create/check internal_name
       end
 
@@ -43,38 +44,48 @@ module ActiveRecord
         end
       end
 
-			# The synchronize method attempts to acquire a mutex lock for the given name
-			# and executes the block passed to it. If the lock is already held by another
-			# database connection, this method will return nil instead of raising an
-			# exception and not execute the block. #
-			#
-			# This method provides a convenient way to ensure that critical sections of code
-			# are executed while holding the mutex lock. It attempts to acquire the lock using
-			# the underlying locking mechanisms (such as {lock} and {unlock}) and executes
-			# the block passed to it.
-			#
-			# The **block** and **timeout** options are passed to the {lock} method
-			# and configure the way the lock is acquired.
-			#
-			# The **force** option is passed to the {unlock} method, which will force the
-			# lock to open if true.
-			#
-			# @example
-			#   foo.mutex.synchronize { do_something_with foo } # wait forever and never give up
-			#
-			# @example
-			#   foo.mutex.synchronize(timeout: 5) { do_something_with foo } # wait 5s and give up
-			#
-			# @example
-			#   unless foo.mutex.synchronize(block: false) { do_something_with foo }
-			#     # try again later
-			#   end
-			#
-			# @param opts [ Hash ] Options hash containing the **block**, **timeout**, or **force** keys
-			#
-			# @yield [ Result ] The block to be executed while holding the mutex lock
-			#
-			# @return [ Nil or result of yielded block ] depending on whether the lock was acquired
+      # The lock_name method generates the name for the mutex's internal lock
+      # variable based on its class and {name} attributes, prefixing it with a
+      # truncated version of the name that only includes printable characters.
+      #
+      # @return [ String ] the generated lock name
+      def lock_name
+        prefix_name = name.gsub(/[^[:print:]]/, '')[0, 32]
+        prefix_name + ?= + internal_name
+      end
+
+      # The synchronize method attempts to acquire a mutex lock for the given name
+      # and executes the block passed to it. If the lock is already held by another
+      # database connection, this method will return nil instead of raising an
+      # exception and not execute the block. #
+      #
+      # This method provides a convenient way to ensure that critical sections of code
+      # are executed while holding the mutex lock. It attempts to acquire the lock using
+      # the underlying locking mechanisms (such as {lock} and {unlock}) and executes
+      # the block passed to it.
+      #
+      # The **block** and **timeout** options are passed to the {lock} method
+      # and configure the way the lock is acquired.
+      #
+      # The **force** option is passed to the {unlock} method, which will force the
+      # lock to open if true.
+      #
+      # @example
+      #   foo.mutex.synchronize { do_something_with foo } # wait forever and never give up
+      #
+      # @example
+      #   foo.mutex.synchronize(timeout: 5) { do_something_with foo } # wait 5s and give up
+      #
+      # @example
+      #   unless foo.mutex.synchronize(block: false) { do_something_with foo }
+      #     # try again later
+      #   end
+      #
+      # @param opts [ Hash ] Options hash containing the **block**, **timeout**, or **force** keys
+      #
+      # @yield [ Result ] The block to be executed while holding the mutex lock
+      #
+      # @return [ Nil or result of yielded block ] depending on whether the lock was acquired
       def synchronize(opts = {})
         locked = lock(opts.slice(:block, :timeout)) or return
         yield
@@ -147,7 +158,7 @@ module ActiveRecord
             decrement_counter
           end
           if counter_zero?
-            case query("SELECT RELEASE_LOCK(#{quote(internal_name)})")
+            case query("SELECT RELEASE_LOCK(#{quote(lock_name)})")
             when 1
               true
             when 0, nil
@@ -181,7 +192,7 @@ module ActiveRecord
       #
       # @return [ true, false ] true if the mutex is unlocked, false otherwise
       def unlocked?
-        query("SELECT IS_FREE_LOCK(#{quote(internal_name)})") == 1
+        query("SELECT IS_FREE_LOCK(#{quote(lock_name)})") == 1
       end
 
       # The locked? method returns true if this mutex is currently locked by
@@ -194,7 +205,7 @@ module ActiveRecord
 
       # Returns true if the mutex is was acquired on this database connection.
       def owned?
-        query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{quote(internal_name)})") == 1
+        query("SELECT CONNECTION_ID() = IS_USED_LOCK(#{quote(lock_name)})") == 1
       end
 
       # Returns true if this mutex was not acquired on this database connection,
@@ -225,13 +236,15 @@ module ActiveRecord
         ActiveRecord::Base.connection.quote(value)
       end
 
+      alias counter_name internal_name
+
       # The counter method generates a unique name for the mutex's internal
       # counter variable. This name is used as part of the SQL query to set and
       # retrieve the counter value.
       #
       # @return [String] the unique name for the mutex's internal counter variable.
       def counter
-        "@#{internal_name}"
+        "@#{counter_name}"
       end
 
       # The increment_counter method increments the internal counter value for
@@ -290,7 +303,7 @@ module ActiveRecord
           increment_counter
           true
         else
-          case query("SELECT GET_LOCK(#{quote(internal_name)}, #{timeout})")
+          case query("SELECT GET_LOCK(#{quote(lock_name)}, #{timeout})")
           when 1
             increment_counter
             true
