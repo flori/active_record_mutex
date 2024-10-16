@@ -1,4 +1,4 @@
-# ActiveRecord::Mutex
+# ActiveRecord Database Mutex
 
 ## Description
 
