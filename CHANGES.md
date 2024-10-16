@@ -1,7 +1,14 @@
 # Changes
 
-## 2024-10-15 v3.0.0
+## 2024-10-16 v3.1.0
 
+* Changes for **3.1.0**:
+  * Implemented `all_mutexes` method in ActiveRecord::DatabaseMutex
+  * Added `MutexInfo` class as a subclass of OpenStruct
+  * Updated `active_record_mutex.gemspec` to use **0.6** version of `ostruct`
+  * Removed `tins` dependency
+
+## 2024-10-15 v3.0.0
 
 ### Major Enhancements
 
