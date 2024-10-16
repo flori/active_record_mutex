@@ -21,7 +21,7 @@ GemHadar do
 
   dependency             'mysql2',       '~> 0.3'
   dependency             'activerecord', '>= 4.0'
-  dependency             'tins',         '~> 1.12'
+  dependency             'ostruct',      '~> 0.6'
   development_dependency 'all_images',   '~> 0.6'
   development_dependency 'test-unit',    '~> 3.0'
   development_dependency 'debug'
