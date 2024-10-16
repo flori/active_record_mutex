@@ -20,9 +20,10 @@ module ActiveRecord
       #
       # @raise [ ArgumentError ] if no **name** option is provided in the options hash.
       def initialize(opts = {})
-        @name = opts[:name].to_s
+        @name = opts[:name].to_s.downcase
         @name.size != 0 or raise ArgumentError, "mutex requires a nonempty :name argument"
-        internal_name # create/check internal_name
+        @name.freeze
+        lock_name # create/check internal_name and lock_name
       end
 
       # Returns the name of this mutex as given via the constructor argument.
@@ -35,7 +36,8 @@ module ActiveRecord
       def internal_name
         @internal_name and return @internal_name
         encoded_name = ?$ + Digest::MD5.base64digest([ self.class.name, name ] * ?#).
-          delete('^A-Za-z0-9+/').gsub(/[+\/]/, ?+ => ?_, ?/ => ?.)
+          delete('^A-Za-z0-9+/').gsub(/[+\/]/, ?+ => ?_, ?/ => ?.).
+          downcase.freeze
         if encoded_name.size <= 64
           @internal_name = encoded_name
         else
@@ -50,8 +52,11 @@ module ActiveRecord
       #
       # @return [ String ] the generated lock name
       def lock_name
+        @lock_name and return @lock_name
         prefix_name = name.gsub(/[^[:print:]]/, '')[0, 32]
-        prefix_name + ?= + internal_name
+        @lock_name = prefix_name + ?= + internal_name
+        @lock_name.downcase!
+        @lock_name.freeze
       end
 
       # The synchronize method attempts to acquire a mutex lock for the given name

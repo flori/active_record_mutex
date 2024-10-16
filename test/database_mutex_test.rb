@@ -25,7 +25,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
     old, ENV['RAILS_ENV'] = ENV['RAILS_ENV'], nil
     mutex = Foo.mutex
     assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
-    assert_equal Foo.name, mutex.name
+    assert_equal Foo.name.downcase, mutex.name
   ensure
     ENV['RAILS_ENV'] = old
   end
@@ -34,7 +34,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
     old, ENV['RAILS_ENV'] = ENV['RAILS_ENV'], 'test'
     mutex = Foo.mutex
     assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
-    assert_equal "#{Foo.name}@test", mutex.name
+    assert_equal "#{Foo.name}@test".downcase, mutex.name
   ensure
     ENV['RAILS_ENV'] = old
   end
@@ -47,7 +47,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
     assert_equal true, instance.save
     mutex = instance.mutex
     assert_kind_of ActiveRecord::DatabaseMutex::Implementation, mutex
-    assert_equal "#{instance.id}@#{Foo.name}", mutex.name
+    assert_equal "#{instance.id}@#{Foo.name}".downcase, mutex.name
   end
 
   def test_factory_method_for
@@ -56,6 +56,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
   end
 
   private def lock_exists?(string)
+    string = string.downcase
     ActiveRecord::Base.all_mutexes.map(&:OBJECT_NAME).any? {
       _1.include?(string)
     }
@@ -73,7 +74,7 @@ class DatabaseMutexTest < Test::Unit::TestCase
 
   def test_create
     mutex = Implementation.new(:name => 'Create')
-    assert_equal 'Create', mutex.name
+    assert_equal 'create', mutex.name
   end
 
   def test_lock
@@ -284,11 +285,11 @@ class DatabaseMutexTest < Test::Unit::TestCase
 
   def test_internal_name
     mutex = Implementation.new(:name => (250..255).map(&:chr) * '')
-    assert_equal '$3i3xQvUrNPGyH6kaIOkiPw', mutex.send(:internal_name)
+    assert_equal '$3i3xqvurnpgyh6kaiokipw', mutex.send(:internal_name)
   end
 
   def test_counter_name
     mutex = Implementation.new(:name => (250..255).map(&:chr) * '')
-    assert_equal '@$3i3xQvUrNPGyH6kaIOkiPw', mutex.send(:counter)
+    assert_equal '@$3i3xqvurnpgyh6kaiokipw', mutex.send(:counter)
   end
 end
