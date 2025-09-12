@@ -10,11 +10,16 @@ ruby processes (also on different hosts) via the connected database.
 
 You can use rubygems to fetch the gem and install it for you:
 
-    # gem install active_record_mutex
+```bash
+gem install active_record_mutex
+```
 
 You can also put this line into your Gemfile
 
-    gem 'active_record_mutex'
+```ruby
+# Gemfile
+gem 'active_record_mutex'
+```
 
 ## Usage
 
@@ -22,25 +27,31 @@ You can also put this line into your Gemfile
 
 To synchronize on a specific ActiveRecord instance you can do this:
 
-    class Foo < ActiveRecord::Base
-    end
+```ruby
+class Foo < ActiveRecord::Base
+end
 
-    foo = Foo.find(666)
-    foo.mutex.synchronize do
-      # Critical section of code here
-    end
+foo = Foo.find(666)
+foo.mutex.synchronize do
+  # Critical section of code here
+end
+```
 
 If you want more control over the mutex and/or give it a special name you can
 create Mutex instance like this:
 
-    my_mutex = ActiveRecord::DatabaseMutex.for('my_mutex')
+```ruby
+my_mutex = ActiveRecord::DatabaseMutex.for('my_mutex')
+``````
 
 Now you can send all messages directly to the Mutex instance or use the custom
 mutex instance to `synchronize` method calls or other operations:
 
-    my_mutex.synchronize do
-      # Critical section of code here
-    end
+```ruby
+my_mutex.synchronize do
+  # Critical section of code here
+end
+```
 
 ### Low-Level Demonstration: Multiple Process Example
 
@@ -51,50 +62,54 @@ rather to illustrate the underlying behavior.
 If two processes are connected to the same database, configured via e.g.
 `DATABASE_URL=mysql2://root@127.0.0.1:3336/test` and this is process 1:
 
-    # process1.rb
-    …
-    mutex = ActiveRecord::DatabaseMutex.for('my_mutex')
+```ruby
+# process1.rb
+…
+mutex = ActiveRecord::DatabaseMutex.for('my_mutex')
 
-    lock_result1 = mutex.lock(timeout: 5)
-    puts "Process 1: Lock acquired (first): #{lock_result1}"
+lock_result1 = mutex.lock(timeout: 5)
+puts "Process 1: Lock acquired (first): #{lock_result1}"
 
-    puts "Process 1: Waiting for 10s"
-    sleep(10)
+puts "Process 1: Waiting for 10s"
+sleep(10)
 
-    lock_result2 = mutex.lock(timeout: 5)
-    puts "Process 1: Lock acquired (second): #{lock_result2}"
+lock_result2 = mutex.lock(timeout: 5)
+puts "Process 1: Lock acquired (second): #{lock_result2}"
 
-    mutex.unlock # first
-    mutex.unlock # second
+mutex.unlock # first
+mutex.unlock # second
 
-    puts "Process 1: Unlocked the mutex twice"
+puts "Process 1: Unlocked the mutex twice"
 
-    puts "Process 1: Waiting for 10s"
-    sleep(10)
+puts "Process 1: Waiting for 10s"
+sleep(10)
 
-    puts "Process 1: Exiting"
+puts "Process 1: Exiting"
+```
 
 and this process 2:
 
-    # process2.rb
-    …
-    mutex = ActiveRecord::DatabaseMutex.for('my_mutex')
+```ruby
+# process2.rb
+…
+mutex = ActiveRecord::DatabaseMutex.for('my_mutex')
 
-    begin
-      lock_result3 = mutex.lock(timeout: 5)
-      puts "Process 2: Lock acquired (first): #{lock_result3}"
-    rescue ActiveRecord::DatabaseMutex::MutexLocked
-      puts "Process 2: Mutex locked by another process, waiting..."
-    end
+begin
+  lock_result3 = mutex.lock(timeout: 5)
+  puts "Process 2: Lock acquired (first): #{lock_result3}"
+rescue ActiveRecord::DatabaseMutex::MutexLocked
+  puts "Process 2: Mutex locked by another process, waiting..."
+end
 
-    puts "Process 2: Waiting for 10s"
-    sleep(10)
+puts "Process 2: Waiting for 10s"
+sleep(10)
 
-    puts "Process 2: Trying to lock again"
-    lock_result4 = mutex.lock(timeout: 5)
-    puts "Process 2: Lock acquired (second): #{lock_result4}"
+puts "Process 2: Trying to lock again"
+lock_result4 = mutex.lock(timeout: 5)
+puts "Process 2: Lock acquired (second): #{lock_result4}"
 
-    puts "Process 2: Exiting"
+puts "Process 2: Exiting"
+```
 
 Running these processes in parallel will output the following:
 
@@ -120,15 +135,21 @@ files, `.envrc` (`direnv allow`) and `docker-compose.yml`
 First start mysql in docker via `docker compose up -d` and configure your
 environment via `direnv allow` as before and then run
 
-    rake test
+```bash
+rake test
+```
 
 or with coverage:
 
-    rake test START_SIMPLECOV=1
+```bash
+rake test START_SIMPLECOV=1
+```
 
 To test for different ruby versions in docker, run:
 
-    all_images
+```bash
+all_images
+```
 
 ## Download
 
