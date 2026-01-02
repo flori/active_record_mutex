@@ -14,6 +14,7 @@ script: &script |-
 fail_fast: yes
 
 env:
+  - MARIADB_TLS_DISABLE_PEER_VERIFICATION=1
   - DATABASE_URL=mysql2://root@host.docker.internal:3336/test
 
 images:
