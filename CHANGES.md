@@ -1,5 +1,30 @@
 # Changes
 
+## 2026-01-02 v3.3.0
+
+- Updated `all_images` development dependency from version **0.6** to
+  **0.11.2** in `active_record_mutex.gemspec`
+- Enabled MariaDB TLS peer verification disable option via environment variable
+  in `.all_images.yml`
+- Added `yaml-dev` and `openssl-dev` packages to Alpine package installation in
+  `.all_images.yml`
+- Updated Ruby gem system and installed `bundler` and `gem_hadar` using `gem
+  update --system` and `gem install`
+- Replaced `bundle install --full-index` with `bundle update --all` and `bundle
+  install --jobs=$(getconf _NPROCESSORS_ONLN)`
+- Added `ruby:4.0-alpine` image configuration to the test suite
+- Updated `s.date` from **2024-10-16** to **1980-01-02**
+- Updated `s.rubygems_version` from **3.5.18** to **4.0.2**
+- Updated `gem_hadar` development dependency from version **~> 1.19** to **>=
+  2.16.3**
+- Added `changelog` block in `Rakefile` to specify `CHANGES.md` as the
+  changelog filename
+- Removed binary detection config in file discovery
+- Updated Docker image for Ruby **3.4**
+- Added support for Ruby **3.4**-alpine images
+- Removed support for Ruby **3.2**-alpine images
+- Added fenced codeblocks for syntax highlighter hints in README.md
+
 ## 2024-10-16 v3.2.1
 
 * Refactor DatabaseMutex implementation:
