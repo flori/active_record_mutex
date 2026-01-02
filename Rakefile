@@ -19,6 +19,10 @@ GemHadar do
   readme      'README.md'
   licenses    << 'GPL-2'
 
+  changelog do
+    filename 'CHANGES.md'
+  end
+
   dependency             'mysql2',       '~> 0.3'
   dependency             'activerecord', '>= 4.0'
   dependency             'ostruct',      '~> 0.6'
