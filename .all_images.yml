@@ -1,7 +1,5 @@
 dockerfile: |-
   RUN apk add --no-cache build-base yaml-dev git openssl-dev mariadb-client mariadb-dev
-  RUN gem update --system
-  RUN gem install bundler gem_hadar
 
 script: &script |-
   echo -e "\e[1m"
@@ -16,6 +14,12 @@ fail_fast: yes
 env:
   - MARIADB_TLS_DISABLE_PEER_VERIFICATION=1
   - DATABASE_URL=mysql2://root@host.docker.internal:3336/test
+
+before: |-
+  rm -f Gemfile.lock
+
+after: |-
+  rm -f Gemfile.lock
 
 images:
   ruby:4.0-alpine: *script
