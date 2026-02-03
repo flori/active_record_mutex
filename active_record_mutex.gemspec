@@ -16,13 +16,13 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/flori/active_record_mutex".freeze
   s.licenses = ["GPL-2".freeze]
   s.rdoc_options = ["--title".freeze, "ActiveRecordMutex - Implementation of a Mutex for Active Record".freeze, "--main".freeze, "README.md".freeze]
-  s.rubygems_version = "4.0.2".freeze
+  s.rubygems_version = "4.0.3".freeze
   s.summary = "Implementation of a Mutex for Active Record".freeze
   s.test_files = ["test/database_mutex_test.rb".freeze, "test/test_helper.rb".freeze]
 
   s.specification_version = 4
 
-  s.add_development_dependency(%q<gem_hadar>.freeze, [">= 2.16.3".freeze])
+  s.add_development_dependency(%q<gem_hadar>.freeze, [">= 2.17.0".freeze])
   s.add_development_dependency(%q<all_images>.freeze, [">= 0.11.2".freeze])
   s.add_development_dependency(%q<test-unit>.freeze, ["~> 3.0".freeze])
   s.add_development_dependency(%q<debug>.freeze, [">= 0".freeze])
